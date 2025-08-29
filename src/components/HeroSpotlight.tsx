@@ -1,0 +1,241 @@
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Play,
+  Info,
+  Star,
+  Calendar,
+  Eye,
+  Bookmark,
+  Share2,
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from './ui/Button';
+import { JikanAnime } from '../lib/jikan';
+import { formatScore, getPreferredTitle, truncateText } from '../lib/utils';
+
+interface HeroSpotlightProps {
+  animes: JikanAnime[];
+  slideIntervalMs?: number;
+}
+
+export function HeroSpotlight({
+  animes,
+  slideIntervalMs = 8000,
+}: HeroSpotlightProps) {
+  const navigate = useNavigate();
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+
+  useEffect(() => {
+    if (!animes || animes.length <= 1 || !isAutoPlaying) return;
+
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % animes.length);
+    }, slideIntervalMs);
+
+    return () => clearInterval(interval);
+  }, [animes, slideIntervalMs, isAutoPlaying]);
+
+  if (!animes || animes.length === 0) return null;
+
+  const anime = animes[currentIndex];
+
+  const handleWatchClick = () => {
+    navigate(`/watch/anime/${anime.mal_id}`);
+  };
+
+  const handleDetailsClick = () => {
+    navigate(`/anime/${anime.mal_id}`);
+  };
+
+  const handleSlideChange = (index: number) => {
+    setCurrentIndex(index);
+    setIsAutoPlaying(false);
+    setTimeout(() => setIsAutoPlaying(true), 10000);
+  };
+
+  const truncatedTitle = truncateText(getPreferredTitle(anime), 25);
+
+  return (
+    <div className="relative h-[500px] md:h-[580px] overflow-hidden bg-black">
+      {/* Background */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={anime.mal_id}
+          initial={{ opacity: 0, scale: 1.05 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 1, ease: 'easeInOut' }}
+          className="absolute inset-0"
+        >
+          <div
+            className="w-full h-full bg-cover bg-center"
+            style={{
+              backgroundImage: `url(${anime.images.jpg.large_image_url})`,
+            }}
+          />
+
+          {/* Overlays */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/80" />
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Content */}
+      <div
+        className="
+          absolute inset-0 flex z-20
+          items-end md:items-center   /* 👈 bottom on mobile, center on desktop */
+      "
+      >
+        <div className="container mx-auto px-6 lg:px-8 pb-6 md:pb-0">
+          <div className="max-w-3xl">
+            {/* Spotlight Badge */}
+            <motion.div
+              key={`spotlight-badge-${anime.mal_id}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mb-3"
+            >
+              <div className="inline-flex items-center gap-3 glass-effect px-4 py-2 rounded-full border border-white/20 shadow-md">
+                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                <span className="text-xs sm:text-sm font-semibold text-white">
+                  🔥 Featured Spotlight
+                </span>
+              </div>
+            </motion.div>
+
+            {/* Title */}
+            <motion.h1
+              key={`title-${anime.mal_id}`}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="text-lg sm:text-xl md:text-3xl lg:text-4xl font-bold mb-3 leading-tight text-white drop-shadow-lg"
+            >
+              {truncatedTitle}
+            </motion.h1>
+
+            {/* Metadata */}
+            <motion.div
+              key={`meta-${anime.mal_id}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="flex flex-wrap items-center gap-2 mb-4 text-[11px] sm:text-xs md:text-sm text-gray-300"
+            >
+              {anime.score && (
+                <div className="flex items-center gap-2 glass-effect px-3 py-1 rounded-full border border-yellow-500/30 shadow-inner">
+                  <Star className="w-3 h-3 md:w-4 md:h-4 text-yellow-400 fill-current" />
+                  <span className="text-yellow-400 font-semibold">
+                    {formatScore(anime.score)}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 glass-effect px-3 py-1 rounded-full border border-white/20">
+                <Calendar className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="font-medium">{anime.year || 'N/A'}</span>
+              </div>
+
+              {anime.episodes && (
+                <div className="flex items-center gap-2 glass-effect px-3 py-1 rounded-full border border-white/20">
+                  <Eye className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="font-medium">{anime.episodes} Episodes</span>
+                </div>
+              )}
+
+              {/* Tags */}
+              <div className="flex gap-1">
+                <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded-full border border-green-500/30 font-semibold text-[10px]">
+                  SUB
+                </span>
+                <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/30 font-semibold text-[10px]">
+                  DUB
+                </span>
+                <span className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded-full border border-purple-500/30 font-semibold text-[10px]">
+                  4K
+                </span>
+              </div>
+            </motion.div>
+
+            {/* Synopsis - desktop only */}
+            {anime.synopsis && (
+              <motion.p
+                key={`synopsis-${anime.mal_id}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+                className="hidden md:block text-gray-300 text-sm md:text-base leading-relaxed mb-5 max-w-2xl drop-shadow-md"
+              >
+                {truncateText(anime.synopsis, 150)}
+              </motion.p>
+            )}
+
+            {/* Action Buttons */}
+            <motion.div
+              key={`actions-${anime.mal_id}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.8 }}
+              className="flex flex-wrap sm:flex-nowrap gap-3 mb-6"
+            >
+              <Button
+                size="lg"
+                variant="gradient"
+                onClick={handleWatchClick}
+                className="flex-1 sm:flex-none gap-2 shadow-glow hover:shadow-glow-lg text-xs sm:text-sm md:text-base"
+                icon={<Play className="w-4 h-4 md:w-5 md:h-5" />}
+              >
+                Watch Now
+              </Button>
+
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={handleDetailsClick}
+                className="flex-1 sm:flex-none gap-2 glass-effect border-white/30 hover:bg-white/10 text-xs sm:text-sm md:text-base"
+                icon={<Info className="w-4 h-4 md:w-5 md:h-5" />}
+              >
+                More Details
+              </Button>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="glass-effect hover:bg-white/10 aspect-square p-0"
+                >
+                  <Share2 className="w-5 h-5" />
+                </Button>
+              </div>
+            </motion.div>
+
+            {/* Slide Indicators */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 1 }}
+              className="flex gap-2"
+            >
+              {animes.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleSlideChange(index)}
+                  className={`w-10 h-1 rounded-full transition-all duration-300 ${
+                    index === currentIndex
+                      ? 'bg-gradient-to-r from-primary-500 to-accent-500 shadow-lg'
+                      : 'bg-white/30 hover:bg-white/50'
+                  }`}
+                />
+              ))}
+            </motion.div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
