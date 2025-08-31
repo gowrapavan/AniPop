@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Search,
@@ -12,6 +12,7 @@ import {
   Users,
 } from 'lucide-react';
 import { Button } from './ui/Button';
+import { debounce } from '../lib/utils';
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -19,19 +20,34 @@ export function Header() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleSearch = (e: React.FormEvent) => {
+  // Memoize the search handler to prevent recreation on every render
+  const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery('');
+      setIsMenuOpen(false); // Close mobile menu after search
     }
-  };
+  }, [searchQuery, navigate]);
+
+  // Debounced navigation to search page
+  const debouncedNavigateToSearch = useMemo(
+    () => debounce(() => {
+      navigate('/search');
+      setIsMenuOpen(false);
+    }, 100),
+    [navigate]
+  );
+
+  const handleSearchIconClick = useCallback(() => {
+    debouncedNavigateToSearch();
+  }, [debouncedNavigateToSearch]);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/80 backdrop-blur-md border-b border-white/10">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          {/* Left: Logo + Mobile menu toggle */}
+ {/* Left: Logo + Mobile menu toggle */}
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -50,8 +66,7 @@ export function Header() {
                 src="/img/logo.png" // <-- your AniPop! logo path
                 alt="AniPop! Logo"
                 className="h-12 w-15 rounded-lg shadow-glow"
-              />
-             
+              />             
             </Link>
           </div>
 
@@ -70,7 +85,7 @@ export function Header() {
                   type="button"
                   variant="secondary"
                   className="rounded-none border-l-0 border-white/20 hover:bg-white/10 bg-black/40 backdrop-blur-sm"
-                  onClick={() => navigate('/search')}
+                  onClick={handleSearchIconClick}
                 >
                   <Filter className="w-4 h-4 text-gray-300" />
                 </Button>
@@ -130,7 +145,7 @@ export function Header() {
           {/* Mobile: Login + Search icon */}
           <div className="flex items-center gap-2 lg:hidden">
             <button 
-              onClick={() => navigate('/search')}
+              onClick={handleSearchIconClick}
               className="text-gray-300 hover:text-white"
             >
               <Search className="w-5 h-5" />
@@ -177,7 +192,7 @@ export function Header() {
               </Button>
 
               {/* Mobile search input */}
-              <form onSubmit={handleSearch} className="mt-2">
+              <form onSubmit={handleSearch} className="mt-2" key="mobile-search">
                 <div className="flex">
                   <input
                     type="text"

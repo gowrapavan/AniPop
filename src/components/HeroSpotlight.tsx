@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Play,
@@ -19,7 +19,7 @@ interface HeroSpotlightProps {
   slideIntervalMs?: number;
 }
 
-export function HeroSpotlight({
+export const HeroSpotlight = memo(function HeroSpotlight({
   animes,
   slideIntervalMs = 8000,
 }: HeroSpotlightProps) {
@@ -37,25 +37,32 @@ export function HeroSpotlight({
     return () => clearInterval(interval);
   }, [animes, slideIntervalMs, isAutoPlaying]);
 
+  // Memoize current anime to prevent unnecessary re-renders
+  const anime = useMemo(() => animes?.[currentIndex], [animes, currentIndex]);
+
   if (!animes || animes.length === 0) return null;
 
-  const anime = animes[currentIndex];
-
-  const handleWatchClick = () => {
+  const handleWatchClick = useCallback(() => {
     navigate(`/watch/anime/${anime.mal_id}`);
-  };
+  }, [navigate, anime?.mal_id]);
 
-  const handleDetailsClick = () => {
+  const handleDetailsClick = useCallback(() => {
     navigate(`/anime/${anime.mal_id}`);
-  };
+  }, [navigate, anime?.mal_id]);
 
-  const handleSlideChange = (index: number) => {
+  const handleSlideChange = useCallback((index: number) => {
     setCurrentIndex(index);
     setIsAutoPlaying(false);
     setTimeout(() => setIsAutoPlaying(true), 10000);
-  };
+  }, []);
 
-  const truncatedTitle = truncateText(getPreferredTitle(anime), 25);
+  // Memoize computed values
+  const truncatedTitle = useMemo(() => {
+    if (!anime) return '';
+    return truncateText(getPreferredTitle(anime), 25);
+  }, [anime]);
+
+  if (!anime) return null;
 
   return (
     <div className="relative h-[500px] md:h-[580px] overflow-hidden bg-black">
@@ -224,7 +231,7 @@ export function HeroSpotlight({
               {animes.map((_, index) => (
                 <button
                   key={index}
-                  onClick={() => handleSlideChange(index)}
+                  onClick={useCallback(() => handleSlideChange(index), [handleSlideChange, index])}
                   className={`w-10 h-1 rounded-full transition-all duration-300 ${
                     index === currentIndex
                       ? 'bg-gradient-to-r from-primary-500 to-accent-500 shadow-lg'
@@ -238,4 +245,4 @@ export function HeroSpotlight({
       </div>
     </div>
   );
-}
+});

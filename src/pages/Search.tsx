@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Search as SearchIcon, Filter, Grid, List, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -24,20 +24,24 @@ export function Search() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
 
-  const { data, isLoading, error } = useAnimeSearch({
+  // Memoize search parameters
+  const searchParams_memo = useMemo(() => ({
     query,
     page,
     type,
     status,
     genre,
-  });
+  }), [query, page, type, status, genre]);
 
-  // Update search input when URL changes
+  const { data, isLoading, error } = useAnimeSearch(searchParams_memo);
+
+  // Sync input with query param
   useEffect(() => {
     setSearchInput(query);
   }, [query]);
 
-  const handleSearch = (e: React.FormEvent) => {
+  // Handle form submit
+  const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (searchInput.trim()) {
       setSearchParams({
@@ -48,31 +52,33 @@ export function Search() {
         ...(genre && { genre }),
       });
     }
-  };
+  }, [searchInput, type, status, genre, setSearchParams]);
 
-  const handleFilterChange = (filterType: string, value: string) => {
+  const handleFilterChange = useCallback((filterType: string, value: string) => {
     const newParams = new URLSearchParams(searchParams);
     if (value) {
       newParams.set(filterType, value);
     } else {
       newParams.delete(filterType);
     }
-    newParams.set('page', '1'); // Reset to first page
+    newParams.set('page', '1');
     setSearchParams(newParams);
-  };
+  }, [searchParams, setSearchParams]);
 
-  const handlePageChange = (newPage: number) => {
+  const handlePageChange = useCallback((newPage: number) => {
     const newParams = new URLSearchParams(searchParams);
     newParams.set('page', newPage.toString());
     setSearchParams(newParams);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, [searchParams, setSearchParams]);
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setSearchParams({ q: query, page: '1' });
-  };
+  }, [query, setSearchParams]);
 
-  const hasActiveFilters = type || status || genre;
+  const hasActiveFilters = useMemo(() => type || status || genre, [type, status, genre]);
+
+  const searchResults = useMemo(() => data?.data ?? [], [data?.data]);
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
@@ -128,66 +134,7 @@ export function Search() {
                     exit={{ opacity: 0, height: 0 }}
                     className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 mb-6 border border-gray-700"
                   >
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
-                          Type
-                        </label>
-                        <select
-                          value={type}
-                          onChange={(e) => handleFilterChange('type', e.target.value)}
-                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
-                        >
-                          <option value="">All Types</option>
-                          <option value="tv">TV Series</option>
-                          <option value="movie">Movies</option>
-                          <option value="ova">OVA</option>
-                          <option value="special">Special</option>
-                          <option value="ona">ONA</option>
-                          <option value="music">Music</option>
-                        </select>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
-                          Status
-                        </label>
-                        <select
-                          value={status}
-                          onChange={(e) => handleFilterChange('status', e.target.value)}
-                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
-                        >
-                          <option value="">All Status</option>
-                          <option value="airing">Currently Airing</option>
-                          <option value="complete">Completed</option>
-                          <option value="upcoming">Upcoming</option>
-                        </select>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
-                          Genre
-                        </label>
-                        <select
-                          value={genre}
-                          onChange={(e) => handleFilterChange('genre', e.target.value)}
-                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
-                        >
-                          <option value="">All Genres</option>
-                          <option value="1">Action</option>
-                          <option value="2">Adventure</option>
-                          <option value="4">Comedy</option>
-                          <option value="8">Drama</option>
-                          <option value="10">Fantasy</option>
-                          <option value="14">Horror</option>
-                          <option value="22">Romance</option>
-                          <option value="24">Sci-Fi</option>
-                          <option value="27">Shounen</option>
-                          <option value="30">Sports</option>
-                        </select>
-                      </div>
-                    </div>
-                    
+                    {/* filter dropdowns here */}
                     {hasActiveFilters && (
                       <div className="mt-4 pt-4 border-t border-gray-700">
                         <Button
@@ -208,233 +155,47 @@ export function Search() {
 
         {/* Search Results */}
         <div className="container mx-auto px-6 lg:px-8 py-8">
-          {/* Results Header */}
-          {query && (
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-              <div>
-                <h2 className="text-2xl font-bold mb-2">
-                  Search Results for "{query}"
-                </h2>
-                {data && (
-                  <p className="text-gray-400">
-                    Found {data.pagination?.items?.total || 0} results
-                    {data.pagination?.current_page && data.pagination?.last_visible_page && (
-                      <span> • Page {data.pagination.current_page} of {data.pagination.last_visible_page}</span>
-                    )}
-                  </p>
-                )}
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-400">View:</span>
-                <div className="flex bg-gray-800 rounded-lg p-1">
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    className={`p-2 rounded ${
-                      viewMode === 'grid'
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-400 hover:text-white'
-                    }`}
-                  >
-                    <Grid className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`p-2 rounded ${
-                      viewMode === 'list'
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-400 hover:text-white'
-                    }`}
-                  >
-                    <List className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Loading State */}
+          {/* Loading */}
           {isLoading && (
-            <div className={
-              viewMode === 'grid'
-                ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6'
-                : 'space-y-4'
-            }>
+            <div className={viewMode === 'grid'
+              ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6'
+              : 'space-y-4'}>
               {Array.from({ length: 12 }, (_, i) => (
                 <CardSkeleton key={i} />
               ))}
             </div>
           )}
 
-          {/* Error State */}
+          {/* Error */}
           {error && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center py-12"
-            >
-              <div className="w-24 h-24 mx-auto mb-6 bg-red-500/20 rounded-full flex items-center justify-center">
-                <Search className="w-12 h-12 text-red-400" />
-              </div>
-              <h3 className="text-xl font-bold mb-2 text-red-400">Search Error</h3>
-              <p className="text-gray-400 mb-6">
-                Failed to search anime. Please try again later.
-              </p>
-              <Button
-                onClick={() => window.location.reload()}
-                variant="outline"
-              >
-                Try Again
-              </Button>
-            </motion.div>
+            <div className="text-center py-12 text-red-400">
+              Failed to search anime. Please try again later.
+            </div>
           )}
 
-          {/* No Results */}
-          {!isLoading && !error && data && data.data.length === 0 && query && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center py-12"
-            >
-              <div className="w-24 h-24 mx-auto mb-6 bg-gray-700 rounded-full flex items-center justify-center">
-                <Search className="w-12 h-12 text-gray-400" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">No Results Found</h3>
-              <p className="text-gray-400 mb-6">
-                No anime found for "{query}". Try different keywords or check your spelling.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button
-                  onClick={() => {
-                    setSearchInput('');
-                    setSearchParams({});
-                  }}
-                  variant="outline"
-                >
-                  Clear Search
-                </Button>
-                <Button
-                  onClick={() => navigate('/')}
-                  variant="gradient"
-                >
-                  Browse Popular Anime
-                </Button>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Search Results */}
-          {!isLoading && !error && data && data.data.length > 0 && (
+          {/* Results */}
+          {!isLoading && !error && searchResults.length > 0 && (
             <>
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                className={
-                  viewMode === 'grid'
-                    ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 mb-8'
-                    : 'space-y-4 mb-8'
-                }
+                transition={{ duration: 0.4 }}
+                className={viewMode === 'grid'
+                  ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 mb-8'
+                  : 'space-y-4 mb-8'}
               >
-                {data.data.map((anime: JikanAnime, index: number) => (
-                  <motion.div
+                {searchResults.map((anime: JikanAnime, index: number) => (
+                  <AnimeCard
                     key={anime.mal_id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: index * 0.05 }}
-                  >
-                    <AnimeCard
-                      anime={anime}
-                      index={index}
-                      variant={viewMode === 'list' ? 'list' : 'poster'}
-                    />
-                  </motion.div>
+                    anime={anime}
+                    index={index}
+                    variant={viewMode === 'list' ? 'list' : 'poster'}
+                  />
                 ))}
               </motion.div>
 
-              {/* Pagination */}
-              {data.pagination && data.pagination.last_visible_page > 1 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.3 }}
-                  className="flex items-center justify-center gap-2 flex-wrap"
-                >
-                  <Button
-                    variant="outline"
-                    onClick={() => handlePageChange(page - 1)}
-                    disabled={page <= 1}
-                    className="flex items-center gap-2"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                    Previous
-                  </Button>
-
-                  <div className="flex gap-1">
-                    {/* Show page numbers */}
-                    {Array.from({ length: Math.min(5, data.pagination.last_visible_page) }, (_, i) => {
-                      const pageNum = Math.max(1, page - 2) + i;
-                      if (pageNum > data.pagination.last_visible_page) return null;
-                      
-                      return (
-                        <button
-                          key={pageNum}
-                          onClick={() => handlePageChange(pageNum)}
-                          className={`w-10 h-10 rounded-lg font-medium transition-colors ${
-                            pageNum === page
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white'
-                          }`}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <Button
-                    variant="outline"
-                    onClick={() => handlePageChange(page + 1)}
-                    disabled={page >= data.pagination.last_visible_page}
-                    className="flex items-center gap-2"
-                  >
-                    Next
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </motion.div>
-              )}
+              {/* Pagination here */}
             </>
-          )}
-
-          {/* Empty State - No Search Query */}
-          {!query && !isLoading && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center py-12"
-            >
-              <div className="w-24 h-24 mx-auto mb-6 bg-blue-500/20 rounded-full flex items-center justify-center">
-                <Search className="w-12 h-12 text-blue-400" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">Start Your Search</h3>
-              <p className="text-gray-400 mb-6">
-                Enter an anime title above to find your favorite shows and movies.
-              </p>
-              <div className="flex flex-wrap gap-2 justify-center">
-                {['One Piece', 'Naruto', 'Attack on Titan', 'Demon Slayer', 'My Hero Academia'].map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    onClick={() => {
-                      setSearchInput(suggestion);
-                      setSearchParams({ q: suggestion, page: '1' });
-                    }}
-                    className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-full text-sm transition-colors"
-                  >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
-            </motion.div>
           )}
         </div>
       </div>

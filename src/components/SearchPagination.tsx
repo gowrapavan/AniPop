@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useMemo, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
 import { Button } from './ui/Button';
 
@@ -9,7 +9,7 @@ interface SearchPaginationProps {
   className?: string;
 }
 
-export function SearchPagination({
+export const SearchPagination = memo(function SearchPagination({
   currentPage,
   totalPages,
   onPageChange,
@@ -17,7 +17,8 @@ export function SearchPagination({
 }: SearchPaginationProps) {
   if (totalPages <= 1) return null;
 
-  const getVisiblePages = () => {
+  // Memoize visible pages calculation
+  const visiblePages = useMemo(() => {
     const delta = 2;
     const range = [];
     const rangeWithDots = [];
@@ -45,15 +46,21 @@ export function SearchPagination({
     }
 
     return rangeWithDots;
-  };
+  }, [currentPage, totalPages]);
 
-  const visiblePages = getVisiblePages();
+  const handlePrevious = useCallback(() => {
+    onPageChange(currentPage - 1);
+  }, [currentPage, onPageChange]);
+
+  const handleNext = useCallback(() => {
+    onPageChange(currentPage + 1);
+  }, [currentPage, onPageChange]);
 
   return (
     <div className={`flex items-center justify-center gap-2 flex-wrap ${className}`}>
       <Button
         variant="outline"
-        onClick={() => onPageChange(currentPage - 1)}
+        onClick={handlePrevious}
         disabled={currentPage <= 1}
         className="flex items-center gap-2"
       >
@@ -86,7 +93,7 @@ export function SearchPagination({
 
       <Button
         variant="outline"
-        onClick={() => onPageChange(currentPage + 1)}
+        onClick={handleNext}
         disabled={currentPage >= totalPages}
         className="flex items-center gap-2"
       >
@@ -95,4 +102,4 @@ export function SearchPagination({
       </Button>
     </div>
   );
-}
+});

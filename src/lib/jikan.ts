@@ -105,11 +105,34 @@ export interface JikanRecommendation {
 }
 
 async function fetchJikan<T>(endpoint: string): Promise<T> {
-  const response = await fetch(`${JIKAN_BASE}${endpoint}`);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+  
+  try {
+    const response = await fetch(`${JIKAN_BASE}${endpoint}`, {
+      signal: controller.signal,
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'HiAnime-App/1.0'
+      }
+    });
+    
+    clearTimeout(timeoutId);
+    
   if (!response.ok) {
+      if (response.status === 429) {
+        throw new Error('Rate limit exceeded. Please try again later.');
+      }
     throw new Error(`Jikan API error: ${response.status}`);
   }
   return response.json();
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      throw new Error('Request timeout. Please try again.');
+    }
+    throw error;
+  }
 }
 
 export const jikanApi = {

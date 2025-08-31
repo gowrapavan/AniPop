@@ -111,7 +111,13 @@ export function Watch() {
     navigate(`/anime/${malId}`);
   };
 
-  const playerUrl = currentEpId ? playerSrc(currentEpId, currentLang) : '';
+  const playerUrl = currentEpId
+    ? playerSrc(
+        currentEpId,
+        currentLang,
+        selectedQuality as 'HD-1' | 'HD-2' | 'HD-3'
+      )
+    : '';
 
   const currentIndex = episodes.findIndex((ep) => ep.episodeId === currentEpId);
   const prevEpisode = currentIndex > 0 ? episodes[currentIndex - 1] : null;
@@ -322,49 +328,6 @@ export function Watch() {
             <div className="bg-gray-900 p-2 sm:p-4 space-y-2 sm:space-y-4 overflow-hidden">
               {/* Top Controls */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
-                <div className="flex items-center gap-1 sm:gap-2 flex-wrap overflow-x-auto">
-                  <button className="flex items-center gap-2 text-white hover:text-gray-300 text-sm">
-                    <Expand className="w-4 h-4" />
-                    <span className="hidden sm:inline">Expand</span>
-                  </button>
-                  <button
-                    onClick={() => setLightMode(!lightMode)}
-                    className="flex items-center gap-2 text-white hover:text-gray-300 text-sm"
-                  >
-                    <Sun className="w-4 h-4" />
-                    <span className="hidden sm:inline">
-                      Light {lightMode ? 'On' : 'Off'}
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => setAutoPlay(!autoPlay)}
-                    className="flex items-center gap-2 text-white hover:text-gray-300 text-sm"
-                  >
-                    <Play className="w-4 h-4" />
-                    <span className="hidden sm:inline">
-                      Auto Play {autoPlay ? 'On' : 'Off'}
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => setAutoNext(!autoNext)}
-                    className="flex items-center gap-2 text-white hover:text-gray-300 text-sm"
-                  >
-                    <SkipForward className="w-4 h-4" />
-                    <span className="hidden sm:inline">
-                      Auto Next {autoNext ? 'On' : 'Off'}
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => setAutoSkipIntro(!autoSkipIntro)}
-                    className="flex items-center gap-2 text-white hover:text-gray-300 text-sm"
-                  >
-                    <SkipForward className="w-4 h-4" />
-                    <span className="hidden sm:inline">
-                      Auto Skip Intro {autoSkipIntro ? 'On' : 'Off'}
-                    </span>
-                  </button>
-                </div>
-
                 <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
                   <button
                     onClick={handlePreviousEpisode}
@@ -392,21 +355,8 @@ export function Watch() {
                   </button>
                 </div>
               </div>
-
-              {/* Current Episode Info */}
-              {currentEpisode && (
-                <div className="bg-gradient-to-r from-primary-500 to-accent-500 text-white p-3 rounded text-sm">
-                  <div className="font-semibold">You are watching</div>
-                  <div>Episode {currentEpisode.number}</div>
-                  <div className="text-xs mt-1 opacity-90">
-                    If current server doesn't work please try other servers
-                    beside.
-                  </div>
-                </div>
-              )}
-
               {/* Quality Selection */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+              <div className="flex flex-col md:flex-row flex-wrap items-start md:items-center gap-2 md:gap-4">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-semibold text-white">SUB:</span>
                   {['HD-1', 'HD-3', 'HD-2'].map((quality) => (
@@ -426,7 +376,8 @@ export function Watch() {
                     </button>
                   ))}
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
+
+                <div className="flex items-center gap-2 flex-wrap mt-2 md:mt-0">
                   <span className="text-sm font-semibold text-white">DUB:</span>
                   {['HD-1', 'HD-3', 'HD-2'].map((quality) => (
                     <button
@@ -446,6 +397,25 @@ export function Watch() {
                   ))}
                 </div>
               </div>
+
+              {/* Current Episode Info */}
+              {/* Current Episode Info */}
+              {currentEpisode && (
+                <div className="bg-gradient-to-r from-primary-500 to-accent-500 text-white p-3 rounded text-sm">
+                  <div className="font-semibold">You are watching</div>
+                  <div>
+                    Episode {currentEpisode.number} -{' '}
+                    {currentEpisode.title &&
+                    currentEpisode.title !== `Episode ${currentEpisode.number}`
+                      ? currentEpisode.title
+                      : ''}
+                  </div>
+                  <div className="text-xs mt-1 opacity-90">
+                    If current server doesn't work please try other servers
+                    beside.
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Next Episode Timer */}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 import { JikanAnime } from '../lib/jikan';
 import { AnimeCard } from './AnimeCard';
@@ -10,7 +10,7 @@ interface SearchResultsGridProps {
   className?: string;
 }
 
-export function SearchResultsGrid({
+export const SearchResultsGrid = memo(function SearchResultsGrid({
   animes,
   viewMode,
   isLoading = false,
@@ -65,4 +65,4 @@ export function SearchResultsGrid({
       </div>
     </motion.div>
   );
-}
+});

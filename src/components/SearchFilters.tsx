@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { Button } from './ui/Button';
@@ -12,7 +12,7 @@ interface SearchFiltersProps {
   className?: string;
 }
 
-export function SearchFilters({
+export const SearchFilters = memo(function SearchFilters({
   type,
   status,
   genre,
@@ -35,7 +35,19 @@ export function SearchFilters({
     { id: '37', name: 'Supernatural' },
   ];
 
-  const hasActiveFilters = type || status || genre;
+  const hasActiveFilters = Boolean(type || status || genre);
+
+  const handleTypeChange = useCallback((value: string) => {
+    onFilterChange('type', value);
+  }, [onFilterChange]);
+
+  const handleStatusChange = useCallback((value: string) => {
+    onFilterChange('status', value);
+  }, [onFilterChange]);
+
+  const handleGenreChange = useCallback((value: string) => {
+    onFilterChange('genre', value);
+  }, [onFilterChange]);
 
   return (
     <motion.div
@@ -80,7 +92,7 @@ export function SearchFilters({
                   name="type"
                   value={option.value}
                   checked={type === option.value}
-                  onChange={(e) => onFilterChange('type', e.target.value)}
+                  onChange={(e) => handleTypeChange(e.target.value)}
                   className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500"
                 />
                 <span className="text-gray-300 text-sm">{option.label}</span>
@@ -107,7 +119,7 @@ export function SearchFilters({
                   name="status"
                   value={option.value}
                   checked={status === option.value}
-                  onChange={(e) => onFilterChange('status', e.target.value)}
+                  onChange={(e) => handleStatusChange(e.target.value)}
                   className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500"
                 />
                 <span className="text-gray-300 text-sm">{option.label}</span>
@@ -128,7 +140,7 @@ export function SearchFilters({
                 name="genre"
                 value=""
                 checked={genre === ''}
-                onChange={(e) => onFilterChange('genre', e.target.value)}
+                onChange={(e) => handleGenreChange(e.target.value)}
                 className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500"
               />
               <span className="text-gray-300 text-sm">All Genres</span>
@@ -140,7 +152,7 @@ export function SearchFilters({
                   name="genre"
                   value={genreOption.id}
                   checked={genre === genreOption.id}
-                  onChange={(e) => onFilterChange('genre', e.target.value)}
+                  onChange={(e) => handleGenreChange(e.target.value)}
                   className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500"
                 />
                 <span className="text-gray-300 text-sm">{genreOption.name}</span>
@@ -151,4 +163,4 @@ export function SearchFilters({
       </div>
     </motion.div>
   );
-}
+});

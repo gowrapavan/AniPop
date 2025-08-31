@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { JikanAnime } from '../lib/jikan';
@@ -8,7 +8,7 @@ interface TrendingSliderProps {
   animes: JikanAnime[];
 }
 
-export function TrendingSlider({ animes }: TrendingSliderProps) {
+export const TrendingSlider = memo(function TrendingSlider({ animes }: TrendingSliderProps) {
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
@@ -24,27 +24,27 @@ export function TrendingSlider({ animes }: TrendingSliderProps) {
     return () => clearInterval(interval);
   }, [isAutoPlaying, animes.length]);
 
-  const goToSlide = (index: number) => {
+  const goToSlide = useCallback((index: number) => {
     setCurrentIndex(index);
     setIsAutoPlaying(false);
     setTimeout(() => setIsAutoPlaying(true), 10000);
-  };
+  }, []);
 
-  const goToPrevious = () => {
+  const goToPrevious = useCallback(() => {
     setCurrentIndex((prev) => (prev - 1 + animes.length) % animes.length);
     setIsAutoPlaying(false);
     setTimeout(() => setIsAutoPlaying(true), 10000);
-  };
+  }, [animes.length]);
 
-  const goToNext = () => {
+  const goToNext = useCallback(() => {
     setCurrentIndex((prev) => (prev + 1) % animes.length);
     setIsAutoPlaying(false);
     setTimeout(() => setIsAutoPlaying(true), 10000);
-  };
+  }, [animes.length]);
 
-  const handleAnimeClick = (anime: JikanAnime) => {
+  const handleAnimeClick = useCallback((anime: JikanAnime) => {
     navigate(`/anime/${anime.mal_id}`);
-  };
+  }, [navigate]);
 
   if (!animes || animes.length === 0) return null;
 
@@ -120,4 +120,4 @@ export function TrendingSlider({ animes }: TrendingSliderProps) {
       `}</style>
     </div>
   );
-}
+});

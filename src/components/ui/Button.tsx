@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { cn } from '../../lib/utils';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -10,7 +10,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   iconPosition?: 'left' | 'right';
 }
 
-export function Button({
+export const Button = memo(function Button({
   className,
   variant = 'primary',
   size = 'md',
@@ -81,4 +81,4 @@ export function Button({
       </div>
     </button>
   );
-}
+});

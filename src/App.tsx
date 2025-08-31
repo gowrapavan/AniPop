@@ -1,4 +1,5 @@
 import React from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Home } from './pages/Home';
@@ -7,14 +8,41 @@ import { AnimeDetail } from './pages/AnimeDetail';
 import { Watch } from './pages/Watch';
 import { clearExpiredCache } from './lib/cache';
 
+// Error Fallback Component
+function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
+  return (
+    <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
+      <div className="text-center max-w-md mx-auto p-6">
+        <h2 className="text-2xl font-bold mb-4 text-red-400">Something went wrong</h2>
+        <p className="text-gray-400 mb-6">
+          {error.message || 'An unexpected error occurred'}
+        </p>
+        <button
+          onClick={resetErrorBoundary}
+          className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-xl font-medium transition-colors"
+        >
+          Try again
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
       gcTime: 10 * 60 * 1000, // 10 minutes
-      retry: 1,
+      retry: (failureCount, error) => {
+        // Don't retry on certain errors to prevent infinite loops
+        if (error?.message?.includes('Rate limit') || error?.message?.includes('404')) {
+          return false;
+        }
+        return failureCount < 2;
+      },
       refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
     },
   },
 });
@@ -24,18 +52,22 @@ clearExpiredCache();
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/search" element={<Search />} />
-            <Route path="/anime/:malId" element={<AnimeDetail />} />
-            <Route path="/watch/anime/:malId" element={<Watch />} />
-          </Routes>
-        </div>
-      </Router>
-    </QueryClientProvider>
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800">
+            <ErrorBoundary FallbackComponent={ErrorFallback}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/search" element={<Search />} />
+                <Route path="/anime/:malId" element={<AnimeDetail />} />
+                <Route path="/watch/anime/:malId" element={<Watch />} />
+              </Routes>
+            </ErrorBoundary>
+          </div>
+        </Router>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

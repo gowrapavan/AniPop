@@ -1,22 +1,66 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo, useMemo } from 'react';
 import { Tag } from 'lucide-react';
 
 const genres = [
-  'Action', 'Adventure', 'Cars', 'Comedy', 'Dementia', 'Demons', 'Drama', 'Ecchi', 
-  'Fantasy', 'Game', 'Harem', 'Historical', 'Horror', 'Isekai', 'Josei', 'Kids', 
-  'Magic', 'Martial Arts', 'Mecha', 'Military', 'Music', 'Mystery', 'Parody', 
-  'Police', 'Psychological', 'Romance', 'Samurai', 'School', 'Sci-Fi', 'Seinen', 
-  'Shoujo', 'Shoujo Ai', 'Shounen', 'Shounen Ai', 'Slice of Life', 'Space', 
-  'Sports', 'Super Power', 'Supernatural', 'Thriller', 'Vampire'
+  'Action',
+  'Adventure',
+  'Cars',
+  'Comedy',
+  'Dementia',
+  'Demons',
+  'Drama',
+  'Ecchi',
+  'Fantasy',
+  'Game',
+  'Harem',
+  'Historical',
+  'Horror',
+  'Isekai',
+  'Josei',
+  'Kids',
+  'Magic',
+  'Martial Arts',
+  'Mecha',
+  'Military',
+  'Music',
+  'Mystery',
+  'Parody',
+  'Police',
+  'Psychological',
+  'Romance',
+  'Samurai',
+  'School',
+  'Sci-Fi',
+  'Seinen',
+  'Shoujo',
+  'Shoujo Ai',
+  'Shounen',
+  'Shounen Ai',
+  'Slice of Life',
+  'Space',
+  'Sports',
+  'Super Power',
+  'Supernatural',
+  'Thriller',
+  'Vampire',
 ];
 
 interface GenresPanelProps {
   className?: string;
 }
 
-export function GenresPanel({ className = '' }: GenresPanelProps) {
+export const GenresPanel = memo(function GenresPanel({
+  className = '',
+}: GenresPanelProps) {
   const [showAll, setShowAll] = useState(false);
-  const displayedGenres = showAll ? genres : genres.slice(0, 20);
+
+  const displayedGenres = useMemo(() => {
+    return showAll ? genres : genres.slice(0, 20);
+  }, [showAll]);
+
+  const toggleShowAll = useCallback(() => {
+    setShowAll((prev) => !prev);
+  }, []);
 
   return (
     <div className={`bg-[#1a1a1a] rounded-xl overflow-hidden ${className}`}>
@@ -26,7 +70,7 @@ export function GenresPanel({ className = '' }: GenresPanelProps) {
           <h3 className="text-white font-semibold">Genres</h3>
         </div>
       </div>
-      
+
       <div className="p-4">
         <div className="flex flex-wrap gap-2 mb-4">
           {displayedGenres.map((genre) => (
@@ -38,9 +82,9 @@ export function GenresPanel({ className = '' }: GenresPanelProps) {
             </button>
           ))}
         </div>
-        
-        <button 
-          onClick={() => setShowAll(!showAll)}
+
+        <button
+          onClick={toggleShowAll}
           className="w-full text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors py-2 border-t border-gray-700"
         >
           {showAll ? 'Show Less' : 'Show More'} →
@@ -48,4 +92,4 @@ export function GenresPanel({ className = '' }: GenresPanelProps) {
       </div>
     </div>
   );
-}
+});

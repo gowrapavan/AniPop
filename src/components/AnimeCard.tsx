@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Star, Play, Plus, Eye, Clock, Calendar, Bookmark } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -12,7 +12,7 @@ interface AnimeCardProps {
   showProgress?: boolean;
 }
 
-export function AnimeCard({
+export const AnimeCard = memo(function AnimeCard({
   anime,
   index = 0,
   variant = 'poster',
@@ -20,19 +20,23 @@ export function AnimeCard({
 }: AnimeCardProps) {
   const navigate = useNavigate();
 
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     navigate(`/anime/${anime.mal_id}`);
-  };
+  }, [navigate, anime.mal_id]);
 
-  const handleWatchClick = (e: React.MouseEvent) => {
+  const handleWatchClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     navigate(`/watch/anime/${anime.mal_id}`);
-  };
+  }, [navigate, anime.mal_id]);
 
-  const handleAddToList = (e: React.MouseEvent) => {
+  const handleAddToList = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     console.log('Added to list:', anime.title);
-  };
+  }, [anime.title]);
+
+  // Memoize computed values
+  const preferredTitle = useCallback(() => getPreferredTitle(anime), [anime]);
+  const truncatedTitle = useCallback(() => truncateText(preferredTitle(), variant === 'list' ? 35 : 45), [preferredTitle, variant]);
 
   if (variant === 'list') {
     return (
@@ -46,7 +50,7 @@ export function AnimeCard({
         <div className="relative w-16 h-20 flex-shrink-0 rounded-xl overflow-hidden">
           <img
             src={anime.images.jpg.image_url}
-            alt={getPreferredTitle(anime)}
+            alt={preferredTitle()}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             loading="lazy"
           />
@@ -65,7 +69,7 @@ export function AnimeCard({
 
         <div className="flex-1 min-w-0">
           <h4 className="font-semibold text-white text-sm leading-tight mb-2 group-hover:text-primary-400 transition-colors line-clamp-2">
-            {truncateText(getPreferredTitle(anime), 35)}
+            {truncatedTitle()}
           </h4>
 
           <div className="flex items-center gap-3 text-xs text-dark-500 mb-2">
@@ -206,7 +210,7 @@ export function AnimeCard({
       <div className="relative aspect-[3/4] overflow-hidden">
         <img
           src={anime.images.jpg.large_image_url}
-          alt={getPreferredTitle(anime)}
+          alt={preferredTitle()}
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           loading="lazy"
         />
@@ -281,7 +285,7 @@ export function AnimeCard({
 
       <div className="p-4 space-y-3">
         <h3 className="font-semibold text-white text-[13px] leading-tight group-hover:text-primary-400 transition-colors duration-300 line-clamp-2">
-          {truncateText(getPreferredTitle(anime), 45)}
+          {truncatedTitle()}
         </h3>
 
         <div className="flex items-center justify-between text-[11px] text-dark-500">
@@ -315,4 +319,4 @@ export function AnimeCard({
       </div>
     </motion.div>
   );
-}
+});
