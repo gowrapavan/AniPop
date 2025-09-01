@@ -158,9 +158,9 @@ export function Search() {
           {/* Loading */}
           {isLoading && (
             <div className={viewMode === 'grid'
-              ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6'
+              ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2'
               : 'space-y-4'}>
-              {Array.from({ length: 12 }, (_, i) => (
+              {Array.from({ length: 13 }, (_, i) => (
                 <CardSkeleton key={i} />
               ))}
             </div>
@@ -181,7 +181,7 @@ export function Search() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.4 }}
                 className={viewMode === 'grid'
-                  ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 mb-8'
+                  ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 mb-8'
                   : 'space-y-4 mb-8'}
               >
                 {searchResults.map((anime: JikanAnime, index: number) => (
@@ -195,6 +195,49 @@ export function Search() {
               </motion.div>
 
               {/* Pagination here */}
+              {/* Pagination */}
+{!isLoading && !error && searchResults.length > 0 && (
+  <div className="flex justify-center items-center gap-2 mt-6">
+    {/* Prev Button */}
+    <Button
+      variant="outline"
+      size="sm"
+      disabled={page <= 1}
+      onClick={() => handlePageChange(page - 1)}
+      className="flex items-center gap-1"
+    >
+      <ChevronLeft className="w-4 h-4" /> Prev
+    </Button>
+
+    {/* Page numbers (show 3 around current) */}
+    {Array.from({ length: 5 }, (_, i) => {
+      const pageNum = page - 2 + i;
+      if (pageNum < 1) return null;
+      return (
+        <Button
+          key={pageNum}
+          variant={pageNum === page ? "gradient" : "outline"}
+          size="sm"
+          onClick={() => handlePageChange(pageNum)}
+          className="px-3"
+        >
+          {pageNum}
+        </Button>
+      );
+    })}
+
+    {/* Next Button */}
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => handlePageChange(page + 1)}
+      className="flex items-center gap-1"
+    >
+      Next <ChevronRight className="w-4 h-4" />
+    </Button>
+  </div>
+)}
+
             </>
           )}
         </div>
