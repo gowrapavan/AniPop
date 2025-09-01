@@ -60,11 +60,15 @@ export function useAnimeSearch(params: SearchParams) {
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     retry: (failureCount, error: any) => {
-      // Don't retry on rate limit errors
-      if (error?.message?.includes('Rate limit')) return false;
-      return failureCount < 2;
+      // Retry up to 3 times for search requests
+      return failureCount < 3;
     },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retryDelay: (attemptIndex) => {
+      // Exponential backoff for search: 3s, 6s, 12s
+      const delay = Math.min(3000 * 2 ** attemptIndex, 12000);
+      console.log(`Retrying search in ${delay}ms (attempt ${attemptIndex + 1})`);
+      return delay;
+    },
 
     // ✅ Add to search history only AFTER success
     onSuccess: (_, vars) => {

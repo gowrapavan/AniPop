@@ -1,6 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Home } from './pages/Home';
 import { Search } from './pages/Search';
@@ -9,11 +14,19 @@ import { Watch } from './pages/Watch';
 import { clearExpiredCache } from './lib/cache';
 
 // Error Fallback Component
-function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
+function ErrorFallback({
+  error,
+  resetErrorBoundary,
+}: {
+  error: Error;
+  resetErrorBoundary: () => void;
+}) {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
       <div className="text-center max-w-md mx-auto p-6">
-        <h2 className="text-2xl font-bold mb-4 text-red-400">Something went wrong</h2>
+        <h2 className="text-2xl font-bold mb-4 text-red-400">
+          Something went wrong
+        </h2>
         <p className="text-gray-400 mb-6">
           {error.message || 'An unexpected error occurred'}
         </p>
@@ -28,6 +41,17 @@ function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetError
   );
 }
 
+// Scroll to top on route change
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+  }, [pathname]);
+
+  return null;
+}
+
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,14 +59,15 @@ const queryClient = new QueryClient({
       staleTime: 5 * 60 * 1000, // 5 minutes
       gcTime: 10 * 60 * 1000, // 10 minutes
       retry: (failureCount, error) => {
-        // Don't retry on certain errors to prevent infinite loops
-        if (error?.message?.includes('Rate limit') || error?.message?.includes('404')) {
-          return false;
-        }
-        return failureCount < 2;
+        return failureCount < 5;
+      },
+      retryDelay: (attemptIndex) => {
+        const delay = Math.min(2000 * 2 ** attemptIndex, 32000);
+        console.log(`Global retry in ${delay}ms (attempt ${attemptIndex + 1})`);
+        return delay;
       },
       refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
+      refetchOnReconnect: true,
     },
   },
 });
@@ -55,6 +80,7 @@ function App() {
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <QueryClientProvider client={queryClient}>
         <Router>
+          <ScrollToTop /> {/* <-- always resets scroll on navigation */}
           <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800">
             <ErrorBoundary FallbackComponent={ErrorFallback}>
               <Routes>

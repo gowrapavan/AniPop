@@ -18,6 +18,23 @@ import {
   setMemoryCache,
 } from '../lib/cache';
 
+// Enhanced query options with better retry logic
+const defaultQueryOptions = {
+  staleTime: 10 * 60 * 1000, // 10 minutes
+  gcTime: 30 * 60 * 1000, // 30 minutes
+  retry: (failureCount: number, error: any) => {
+    // Retry up to 5 times for all errors including rate limits
+    return failureCount < 5;
+  },
+  retryDelay: (attemptIndex: number) => {
+    // Exponential backoff: 2s, 4s, 8s, 16s, 32s
+    const delay = Math.min(2000 * 2 ** attemptIndex, 32000);
+    console.log(`Retrying in ${delay}ms (attempt ${attemptIndex + 1})`);
+    return delay;
+  },
+  refetchOnWindowFocus: false,
+  refetchOnReconnect: true,
+};
 export function useTopAiring() {
   return useQuery({
     queryKey: ['anime', 'top-airing'],
@@ -25,8 +42,7 @@ export function useTopAiring() {
       const response = await jikanApi.getTopAiring();
       return response.data;
     },
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 30 * 60 * 1000,
+    ...defaultQueryOptions,
   });
 }
 
@@ -37,8 +53,7 @@ export function useTrending() {
       const response = await jikanApi.getTrending();
       return response.data;
     },
-    staleTime: 10 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
+    ...defaultQueryOptions,
   });
 }
 
@@ -49,8 +64,7 @@ export function useMostPopular() {
       const response = await jikanApi.getMostPopular();
       return response.data;
     },
-    staleTime: 10 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
+    ...defaultQueryOptions,
   });
 }
 
@@ -61,8 +75,7 @@ export function useMostFavorite() {
       const response = await jikanApi.getMostFavorite();
       return response.data;
     },
-    staleTime: 10 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
+    ...defaultQueryOptions,
   });
 }
 
@@ -73,8 +86,7 @@ export function useLatestCompleted() {
       const response = await jikanApi.getLatestCompleted();
       return response.data || [];
     },
-    staleTime: 10 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
+    ...defaultQueryOptions,
   });
 }
 

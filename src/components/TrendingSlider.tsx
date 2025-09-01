@@ -6,13 +6,82 @@ import { getPreferredTitle } from '../lib/utils';
 
 interface TrendingSliderProps {
   animes: JikanAnime[];
+  isLoading?: boolean;
+  error?: any;
+  onRetry?: () => void;
 }
 
-export const TrendingSlider = memo(function TrendingSlider({ animes }: TrendingSliderProps) {
+export const TrendingSlider = memo(function TrendingSlider({ 
+  animes, 
+  isLoading = false, 
+  error, 
+  onRetry 
+}: TrendingSliderProps) {
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
+  // Auto-retry on error after a delay
+  React.useEffect(() => {
+    if (error && onRetry && !isLoading) {
+      console.log('Auto-retrying trending slider in 5 seconds...');
+      const timer = setTimeout(() => {
+        console.log('Auto-retrying trending slider now');
+        onRetry();
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [error, onRetry, isLoading]);
+
+  // Error State
+  if (error && !isLoading) {
+    return (
+      <div className="bg-gray-800/50 rounded-xl p-8 text-center">
+        <div className="w-16 h-16 mx-auto mb-4 bg-red-500/20 rounded-full flex items-center justify-center">
+          <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h3 className="text-white font-semibold mb-2">Failed to Load Trending</h3>
+        <p className="text-gray-400 text-sm mb-4">
+          Unable to fetch trending anime. Automatically retrying in a few seconds...
+        </p>
+        <div className="flex items-center justify-center gap-2 text-blue-400 text-sm mb-4">
+          <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+          <span>Retrying automatically...</span>
+        </div>
+        {onRetry && (
+          <Button
+            onClick={onRetry}
+            variant="outline"
+            size="sm"
+            className="mx-auto flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Retry Now
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  // Loading State
+  if (isLoading || !animes || animes.length === 0) {
+    return (
+      <div className="flex gap-4 overflow-x-auto pb-4 max-w-full">
+        {Array.from({ length: 10 }, (_, i) => (
+          <div key={i} className="flex-shrink-0 w-32">
+            <div className="aspect-[3/4] bg-gray-700 rounded-lg animate-pulse mb-2"></div>
+            <div className="h-4 bg-gray-700 rounded animate-pulse mb-1"></div>
+            <div className="h-3 bg-gray-700 rounded w-2/3 animate-pulse"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
   // Auto-slide functionality
   useEffect(() => {
     if (!isAutoPlaying || animes.length <= 1) return;

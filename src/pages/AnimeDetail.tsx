@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Twitter, Facebook, Copy } from "lucide-react";
+import { Twitter, Facebook, Copy } from 'lucide-react';
 
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
@@ -39,6 +39,15 @@ export function AnimeDetail() {
 
   const handleWatchClick = () => {
     navigate(`/watch/anime/${malId}`);
+  };
+
+  const typeColors: Record<string, string> = {
+    TV: 'bg-blue-500/20 text-blue-300',
+    Movie: 'bg-red-500/20 text-red-300',
+    OVA: 'bg-purple-500/20 text-purple-300',
+    ONA: 'bg-pink-500/20 text-pink-300',
+    Special: 'bg-green-500/20 text-green-300',
+    Music: 'bg-yellow-500/20 text-yellow-300',
   };
 
   const handleShare = (platform: string) => {
@@ -135,7 +144,13 @@ export function AnimeDetail() {
                 Home
               </Link>
               <ChevronRight className="w-4 h-4 text-gray-500" />
-              <span className="text-blue-400 cursor-pointer">TV</span>
+              {anime.type && (
+                <span
+                  className={`text-blue-400 hover:text-blue-300 transition-colors ${anime.type}`}
+                >
+                  {anime.type}
+                </span>
+              )}
               <ChevronRight className="w-4 h-4 text-gray-500" />
               <span className="text-gray-300 truncate">
                 {getPreferredTitle(anime)}
@@ -191,9 +206,16 @@ export function AnimeDetail() {
                     {formatScore(anime.score)}
                   </span>
                 )}
-                <span className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full">
-                  TV
-                </span>
+                {anime.type && (
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                      typeColors[anime.type] || 'bg-gray-700/50 text-gray-300'
+                    }`}
+                  >
+                    {anime.type}
+                  </span>
+                )}
+
                 {anime.episodes && (
                   <span className="bg-gray-700/50 px-2 py-1 rounded-full">
                     {anime.episodes} Episodes
@@ -202,40 +224,39 @@ export function AnimeDetail() {
               </div>
 
               {/* Share row */}
-<div className="flex items-center gap-3">
-  <span className="text-gray-400 text-sm font-medium">
-    Share:
-  </span>
-  <Button
-    size="icon"
-    className="glass-effect"
-    onClick={() => handleShare('twitter')}
-  >
-    <Twitter className="w-4 h-4" />
-  </Button>
-  <Button
-    size="icon"
-    className="glass-effect"
-    onClick={() => handleShare('facebook')}
-  >
-    <Facebook className="w-4 h-4" />
-  </Button>
-  <Button
-    size="icon"
-    className="glass-effect"
-    onClick={() => handleShare('copy')}
-  >
-    <Copy className="w-4 h-4" />
-  </Button>
-  <Button
-    size="icon"
-    variant="destructive"
-    className="shadow-glow"
-  >
-    <Heart className="w-4 h-4" />
-  </Button>
-</div>
-
+              <div className="flex items-center gap-3">
+                <span className="text-gray-400 text-sm font-medium">
+                  Share:
+                </span>
+                <Button
+                  size="icon"
+                  className="glass-effect"
+                  onClick={() => handleShare('twitter')}
+                >
+                  <Twitter className="w-4 h-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  className="glass-effect"
+                  onClick={() => handleShare('facebook')}
+                >
+                  <Facebook className="w-4 h-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  className="glass-effect"
+                  onClick={() => handleShare('copy')}
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="destructive"
+                  className="shadow-glow"
+                >
+                  <Heart className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
 
             {/* Watch Now (full width under the grid) */}
@@ -309,14 +330,6 @@ export function AnimeDetail() {
                       </p>
                     )}
                 </div>
-                <Button
-                  onClick={handleWatchClick}
-                  variant="gradient"
-                  className="shadow-glow flex items-center gap-2"
-                >
-                  <Play className="w-5 h-5" />
-                  Watch Now
-                </Button>
               </div>
 
               {/* Metadata */}
@@ -329,9 +342,16 @@ export function AnimeDetail() {
                     </span>
                   </div>
                 )}
-                <span className="bg-gradient-to-r from-primary-500 to-accent-500 px-3 py-1.5 rounded-full text-sm font-bold shadow-glow-sm">
-                  TV
-                </span>
+                {anime.type && (
+                  <span
+                    className={`px-3 py-1.5 rounded-full text-sm font-bold shadow-glow-sm ${
+                      typeColors[anime.type] || 'bg-gray-700/50 text-gray-300'
+                    }`}
+                  >
+                    {anime.type}
+                  </span>
+                )}
+
                 {anime.status && (
                   <span className="bg-green-500/20 px-3 py-1.5 rounded-full text-sm font-bold text-green-400">
                     {anime.status}
@@ -353,18 +373,38 @@ export function AnimeDetail() {
 
               {/* Share */}
               <div className="flex items-center gap-3">
+                <Button
+                  onClick={handleWatchClick}
+                  variant="gradient"
+                  className="shadow-glow flex items-center gap-2"
+                >
+                  <Play className="w-5 h-5" />
+                  Watch Now
+                </Button>
                 <span className="text-gray-400 text-sm font-medium">
                   Share:
                 </span>
-<Button size="icon" className="glass-effect" onClick={() => handleShare('twitter')}>
-  <Twitter className="w-4 h-4" />
-</Button>
-<Button size="icon" className="glass-effect" onClick={() => handleShare('facebook')}>
-  <Facebook className="w-4 h-4" />
-</Button>
-<Button size="icon" className="glass-effect" onClick={() => handleShare('copy')}>
-  <Copy className="w-4 h-4" />
-</Button>
+                <Button
+                  size="icon"
+                  className="glass-effect"
+                  onClick={() => handleShare('twitter')}
+                >
+                  <Twitter className="w-4 h-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  className="glass-effect"
+                  onClick={() => handleShare('facebook')}
+                >
+                  <Facebook className="w-4 h-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  className="glass-effect"
+                  onClick={() => handleShare('copy')}
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
 
                 <Button
                   size="icon"
@@ -424,7 +464,16 @@ export function AnimeDetail() {
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-400">Type:</span>
-                    <span className="text-white">TV</span>
+                    {anime.type && (
+                      <span
+                        className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                          typeColors[anime.type] ||
+                          'bg-gray-700/50 text-gray-300'
+                        }`}
+                      >
+                        {anime.type}
+                      </span>
+                    )}
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Status:</span>
@@ -487,18 +536,21 @@ export function AnimeDetail() {
               <Users className="w-6 h-6" />
               Characters
             </h2>
-            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+            <div className="flex gap-0 overflow-x-auto pb-2 scrollbar-hide">
               {characters?.slice(0, 12).map((char) => (
                 <div
                   key={char.character.mal_id}
-                  className="flex-shrink-0 w-48 glass-effect rounded-xl p-4 hover:bg-white/10 transition cursor-pointer"
+                  className="flex-shrink-0 w-32 flex flex-col items-center text-center 
+                   glass-effect rounded-2xl p-2 hover:bg-white/10 transition cursor-pointer"
                 >
-                  <img
-                    src={char.character.images.jpg.image_url}
-                    alt={char.character.name}
-                    className="w-full h-32 object-cover rounded-lg mb-3"
-                  />
-                  <h4 className="font-medium text-sm text-white truncate">
+                  <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-white/20 mb-3">
+                    <img
+                      src={char.character.images.jpg.image_url}
+                      alt={char.character.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <h4 className="font-medium text-sm text-white truncate w-full">
                     {char.character.name}
                   </h4>
                   <p className="text-xs text-gray-400">{char.role}</p>
@@ -515,11 +567,20 @@ export function AnimeDetail() {
             className="mb-12"
           >
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <Star className="w-6 h-6" />
               Recommended for You
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-              {recommendations?.slice(0, 12).map((rec) => (
+            <div
+              className="
+    grid grid-cols-2
+    sm:grid-cols-3
+    md:grid-cols-4
+    min-[900px]:grid-cols-5
+    lg:grid-cols-6
+    xl:grid-cols-7
+    gap-3
+  "
+            >
+              {recommendations?.slice(0, 14).map((rec) => (
                 <AnimeCard key={rec.entry.mal_id} anime={rec.entry} />
               ))}
             </div>

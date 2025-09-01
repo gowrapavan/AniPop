@@ -106,45 +106,88 @@ export interface JikanRecommendation {
 
 async function fetchJikan<T>(endpoint: string): Promise<T> {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-  
+  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
   try {
     const response = await fetch(`${JIKAN_BASE}${endpoint}`, {
       signal: controller.signal,
       headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'HiAnime-App/1.0'
-      }
+        Accept: 'application/json',
+        'User-Agent': 'HiAnime-App/1.0',
+        'Cache-Control': 'no-cache',
+      },
     });
-    
+
     clearTimeout(timeoutId);
-    
-  if (!response.ok) {
+
+    if (!response.ok) {
       if (response.status === 429) {
-        throw new Error('Rate limit exceeded. Please try again later.');
+        throw new Error(
+          'Rate limit exceeded. Please wait a moment and try again.'
+        );
       }
-    throw new Error(`Jikan API error: ${response.status}`);
-  }
-  return response.json();
+      if (response.status >= 500) {
+        throw new Error('Server error. Please try again in a few moments.');
+      }
+      throw new Error(`Jikan API error: ${response.status}`);
+    }
+    return response.json();
   } catch (error) {
     clearTimeout(timeoutId);
     if (error.name === 'AbortError') {
-      throw new Error('Request timeout. Please try again.');
+      throw new Error(
+        'Request timeout. The server is taking too long to respond.'
+      );
     }
     throw error;
   }
 }
-
 export const jikanApi = {
-  getTopAiring: () => fetchJikan<JikanResponse<JikanAnime[]>>('/top/anime?filter=airing&limit=20'),
-  getMostPopular: () => fetchJikan<JikanResponse<JikanAnime[]>>('/top/anime?filter=bypopularity&limit=20'),
-  getMostFavorite: () => fetchJikan<JikanResponse<JikanAnime[]>>('/top/anime?filter=favorite&limit=20'),
-  getLatestCompleted: () => fetchJikan<JikanResponse<JikanAnime[]>>('/top/anime?filter=completed&limit=20'),
-  getTrending: () => fetchJikan<JikanResponse<JikanAnime[]>>('/seasons/now?limit=20'),
-  getAnimeDetails: (malId: number) => fetchJikan<JikanResponse<JikanAnime>>(`/anime/${malId}/full`),
-  getCharacters: (malId: number) => fetchJikan<JikanResponse<JikanCharacter[]>>(`/anime/${malId}/characters`),
-  getRecommendations: (malId: number) => fetchJikan<JikanResponse<JikanRecommendation[]>>(`/anime/${malId}/recommendations`),
-  searchAnime: (params: { query: string; page?: number; type?: string; status?: string; genre?: string; limit?: number }) => {
+  getTopToday: () =>
+    fetchJikan<JikanResponse<JikanAnime[]>>('/top/anime?limit=10'), // default top 10
+  getTopWeek: () =>
+    fetchJikan<JikanResponse<JikanAnime[]>>(
+      '/top/anime?filter=bypopularity&limit=10'
+    ),
+  getTopMonth: () =>
+    fetchJikan<JikanResponse<JikanAnime[]>>(
+      '/top/anime?filter=favorite&limit=10'
+    ),
+
+  getTopAiring: () =>
+    fetchJikan<JikanResponse<JikanAnime[]>>(
+      '/top/anime?filter=airing&limit=20'
+    ),
+  getMostPopular: () =>
+    fetchJikan<JikanResponse<JikanAnime[]>>(
+      '/top/anime?filter=bypopularity&limit=20'
+    ),
+  getMostFavorite: () =>
+    fetchJikan<JikanResponse<JikanAnime[]>>(
+      '/top/anime?filter=favorite&limit=20'
+    ),
+  getLatestCompleted: () =>
+    fetchJikan<JikanResponse<JikanAnime[]>>(
+      '/top/anime?filter=completed&limit=20'
+    ),
+  getTrending: () =>
+    fetchJikan<JikanResponse<JikanAnime[]>>('/seasons/now?limit=20'),
+  getAnimeDetails: (malId: number) =>
+    fetchJikan<JikanResponse<JikanAnime>>(`/anime/${malId}/full`),
+  getCharacters: (malId: number) =>
+    fetchJikan<JikanResponse<JikanCharacter[]>>(`/anime/${malId}/characters`),
+  getRecommendations: (malId: number) =>
+    fetchJikan<JikanResponse<JikanRecommendation[]>>(
+      `/anime/${malId}/recommendations`
+    ),
+  searchAnime: (params: {
+    query: string;
+    page?: number;
+    type?: string;
+    status?: string;
+    genre?: string;
+    limit?: number;
+  }) => {
     const searchParams = new URLSearchParams({
       q: params.query,
       page: (params.page || 1).toString(),
@@ -152,11 +195,13 @@ export const jikanApi = {
       order_by: 'score',
       sort: 'desc',
     });
-    
+
     if (params.type) searchParams.append('type', params.type);
     if (params.status) searchParams.append('status', params.status);
     if (params.genre) searchParams.append('genres', params.genre);
-    
-    return fetchJikan<JikanResponse<JikanAnime[]>>(`/anime?${searchParams.toString()}`);
+
+    return fetchJikan<JikanResponse<JikanAnime[]>>(
+      `/anime?${searchParams.toString()}`
+    );
   },
 };

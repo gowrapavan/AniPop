@@ -3,13 +3,14 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Search,
   Filter,
-  Globe,
-  Rss,
   User,
   Menu,
   X,
-  Command as Random,
-  Users,
+  Home,
+  Flame,
+  Star,
+  Film,
+  Tv,
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { debounce } from '../lib/utils';
@@ -20,22 +21,26 @@ export function Header() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Memoize the search handler to prevent recreation on every render
-  const handleSearch = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery('');
-      setIsMenuOpen(false); // Close mobile menu after search
-    }
-  }, [searchQuery, navigate]);
+  // Search handler
+  const handleSearch = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      if (searchQuery.trim()) {
+        navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+        setSearchQuery('');
+        setIsMenuOpen(false); // close menu on mobile
+      }
+    },
+    [searchQuery, navigate]
+  );
 
-  // Debounced navigation to search page
+  // Debounced nav to search page
   const debouncedNavigateToSearch = useMemo(
-    () => debounce(() => {
-      navigate('/search');
-      setIsMenuOpen(false);
-    }, 100),
+    () =>
+      debounce(() => {
+        navigate('/search');
+        setIsMenuOpen(false);
+      }, 100),
     [navigate]
   );
 
@@ -43,11 +48,28 @@ export function Header() {
     debouncedNavigateToSearch();
   }, [debouncedNavigateToSearch]);
 
+  // Nav links config (so mobile & desktop share)
+  const navLinks = [
+    { to: '/', label: 'Home', icon: <Home className="w-4 h-4 mr-2" /> },
+    { to: '/movies', label: 'Movies', icon: <Film className="w-4 h-4 mr-2" /> },
+    { to: '/tv', label: 'TV Series', icon: <Tv className="w-4 h-4 mr-2" /> },
+    {
+      to: '/popular',
+      label: 'Most Popular',
+      icon: <Flame className="w-4 h-4 mr-2" />,
+    },
+    {
+      to: '/top-airing',
+      label: 'Top Airing',
+      icon: <Star className="w-4 h-4 mr-2" />,
+    },
+  ];
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/80 backdrop-blur-md border-b border-white/10">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
- {/* Left: Logo + Mobile menu toggle */}
+          {/* Left: Logo + Menu */}
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -61,16 +83,15 @@ export function Header() {
             </button>
 
             <Link to="/" className="flex items-center gap-2">
-              {/* Replace H box with logo */}
               <img
-                src="/img/logo.png" // <-- your AniPop! logo path
+                src="/img/logo.png"
                 alt="AniPop! Logo"
-                className="h-12 w-15 rounded-lg shadow-glow"
-              />             
+                className="h-12 w-auto rounded-lg shadow-glow"
+              />
             </Link>
           </div>
 
-          {/* Center: Search (hidden on mobile) */}
+          {/* Center: Search (desktop only) */}
           <div className="hidden md:flex flex-1 max-w-2xl mx-4">
             <form onSubmit={handleSearch} className="relative w-full">
               <div className="flex">
@@ -101,50 +122,30 @@ export function Header() {
           </div>
 
           {/* Right: Desktop nav */}
-          <div className="hidden lg:flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="glass-effect text-gray-300 hover:text-white hover:bg-white/10"
-            >
-              <Users className="w-4 h-4 mr-2" /> Watch2gether
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="glass-effect text-gray-300 hover:text-white hover:bg-white/10"
-            >
-              <Random className="w-4 h-4 mr-2" /> Random
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="glass-effect text-gray-300 hover:text-white hover:bg-white/10"
-            >
-              <Globe className="w-4 h-4 mr-2" /> EN
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="glass-effect text-gray-300 hover:text-white hover:bg-white/10"
-            >
-              <Rss className="w-4 h-4 mr-2" /> News
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="glass-effect text-gray-300 hover:text-white hover:bg-white/10"
-            >
-              <Users className="w-4 h-4 mr-2" /> Community
-            </Button>
+          <div className="hidden lg:flex items-center gap-4">
+            {navLinks.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={`px-4 py-2 rounded-lg flex items-center transition-colors ${
+                  location.pathname === link.to
+                    ? 'bg-white/10 text-white shadow-glow'
+                    : 'text-gray-300 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                {link.icon}
+                {link.label}
+              </Link>
+            ))}
+
             <Button variant="gradient" size="sm" className="shadow-glow">
               <User className="w-4 h-4 mr-2" /> Login
             </Button>
           </div>
 
-          {/* Mobile: Login + Search icon */}
+          {/* Mobile: Search + Login */}
           <div className="flex items-center gap-2 lg:hidden">
-            <button 
+            <button
               onClick={handleSearchIconClick}
               className="text-gray-300 hover:text-white"
             >
@@ -156,43 +157,32 @@ export function Header() {
           </div>
         </div>
 
-        {/* Mobile dropdown */}
+        {/* Mobile dropdown nav */}
         {isMenuOpen && (
           <div className="lg:hidden border-t border-white/10 py-4 animate-slide-down glass-effect">
             <div className="flex flex-col gap-2">
-              <Button
-                variant="ghost"
-                className="justify-start text-gray-300 hover:text-white hover:bg-white/10"
-              >
-                <Users className="w-4 h-4 mr-2" /> Watch2gether
-              </Button>
-              <Button
-                variant="ghost"
-                className="justify-start text-gray-300 hover:text-white hover:bg-white/10"
-              >
-                <Random className="w-4 h-4 mr-2" /> Random
-              </Button>
-              <Button
-                variant="ghost"
-                className="justify-start text-gray-300 hover:text-white hover:bg-white/10"
-              >
-                <Globe className="w-4 h-4 mr-2" /> Language
-              </Button>
-              <Button
-                variant="ghost"
-                className="justify-start text-gray-300 hover:text-white hover:bg-white/10"
-              >
-                <Rss className="w-4 h-4 mr-2" /> News
-              </Button>
-              <Button
-                variant="ghost"
-                className="justify-start text-gray-300 hover:text-white hover:bg-white/10"
-              >
-                <Users className="w-4 h-4 mr-2" /> Community
-              </Button>
+              {navLinks.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  onClick={() => setIsMenuOpen(false)}
+                  className={`px-3 py-2 rounded-lg flex items-center transition-colors ${
+                    location.pathname === link.to
+                      ? 'bg-white/10 text-white shadow-glow'
+                      : 'text-gray-300 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  {link.icon}
+                  {link.label}
+                </Link>
+              ))}
 
               {/* Mobile search input */}
-              <form onSubmit={handleSearch} className="mt-2" key="mobile-search">
+              <form
+                onSubmit={handleSearch}
+                className="mt-3"
+                key="mobile-search"
+              >
                 <div className="flex">
                   <input
                     type="text"

@@ -8,6 +8,7 @@ import {
   Eye,
   Bookmark,
   Share2,
+  RefreshCw,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from './ui/Button';
@@ -17,16 +18,95 @@ import { formatScore, getPreferredTitle, truncateText } from '../lib/utils';
 interface HeroSpotlightProps {
   animes: JikanAnime[];
   slideIntervalMs?: number;
+  isLoading?: boolean;
+  error?: any;
+  onRetry?: () => void;
 }
 
 export const HeroSpotlight = memo(function HeroSpotlight({
   animes,
   slideIntervalMs = 8000,
+  isLoading = false,
+  error,
+  onRetry,
 }: HeroSpotlightProps) {
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
+  // Auto-retry on error after a delay
+  React.useEffect(() => {
+    if (error && onRetry && !isLoading) {
+      console.log('Auto-retrying hero spotlight in 5 seconds...');
+      const timer = setTimeout(() => {
+        console.log('Auto-retrying hero spotlight now');
+        onRetry();
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [error, onRetry, isLoading]);
+
+  // Error State
+  if (error && !isLoading) {
+    return (
+      <div className="relative h-[500px] md:h-[580px] overflow-hidden bg-gray-900 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="w-20 h-20 mx-auto mb-6 bg-red-500/20 rounded-full flex items-center justify-center">
+            <svg className="w-10 h-10 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 className="text-white font-bold text-xl mb-3">Failed to Load Featured Content</h3>
+          <p className="text-gray-400 mb-6">
+            {error?.message?.includes('Rate limit') 
+              ? 'Rate limit exceeded. Automatically retrying in a few seconds...'
+              : 'Unable to load featured anime. Please check your connection and try again.'
+            }
+          </p>
+          <div className="flex items-center justify-center gap-2 text-blue-400 mb-4">
+            <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-sm">Retrying automatically...</span>
+          </div>
+          {onRetry && (
+            <Button
+              onClick={onRetry}
+              variant="gradient"
+              className="shadow-glow flex items-center gap-2"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Retry Now
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Loading State
+  if (isLoading || !animes || animes.length === 0) {
+    return (
+      <div className="relative h-[500px] md:h-[580px] overflow-hidden bg-gray-900">
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-800 via-gray-700/50 to-transparent animate-pulse">
+          <div className="h-full flex items-center px-8 md:px-12">
+            <div className="max-w-3xl space-y-6">
+              <div className="h-6 bg-gray-600 rounded w-48 animate-pulse"></div>
+              <div className="h-12 bg-gray-600 rounded w-3/4 animate-pulse"></div>
+              <div className="space-y-3">
+                <div className="h-4 bg-gray-600 rounded animate-pulse"></div>
+                <div className="h-4 bg-gray-600 rounded w-5/6 animate-pulse"></div>
+                <div className="h-4 bg-gray-600 rounded w-4/6 animate-pulse"></div>
+              </div>
+              <div className="flex gap-4 mt-6">
+                <div className="h-12 w-32 bg-gray-600 rounded-xl animate-pulse"></div>
+                <div className="h-12 w-32 bg-gray-600 rounded-xl animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   useEffect(() => {
     if (!animes || animes.length <= 1 || !isAutoPlaying) return;
 

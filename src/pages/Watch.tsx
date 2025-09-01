@@ -302,7 +302,9 @@ export function Watch() {
               {playerUrl ? (
                 <iframe
                   src={playerUrl}
-                  className="w-full h-[250px] sm:h-[350px] lg:h-[calc(100vh-20rem)]"
+                  className="w-full h-[250px] sm:h-[350px] lg:h-[calc(100vh-20rem)] rounded-xl shadow-lg"
+                  allow="autoplay; fullscreen; picture-in-picture"
+                  sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
                   allowFullScreen
                   title={
                     currentEpisode
@@ -310,6 +312,7 @@ export function Watch() {
                       : 'Anime Player'
                   }
                 />
+
               ) : (
                 <div className="w-full h-[250px] sm:h-[350px] lg:h-[calc(100vh-20rem)] flex items-center justify-center">
                   <div className="text-center text-white">

@@ -1,6 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Crown } from 'lucide-react';
 import { Header } from '../components/Header';
+import { Button } from '../components/ui/Button';
 import { HeroSpotlight } from '../components/HeroSpotlight';
 import { AnimeCard } from '../components/AnimeCard';
 import { CommentsPanel } from '../components/CommentsPanel';
@@ -9,6 +11,8 @@ import { CardSkeleton } from '../components/Skeletons/CardSkeleton';
 import { HeroSkeleton } from '../components/Skeletons/HeroSkeleton';
 import { TrendingSlider } from '../components/TrendingSlider';
 import { Footer } from '../components/Footer';
+import { Top10 } from '../components/Top10';
+
 import {
   useTopAiring,
   useTrending,
@@ -21,6 +25,8 @@ interface SectionProps {
   title: string;
   data: any[] | undefined;
   isLoading: boolean;
+  error: any;
+  refetch?: () => void;
   layout?: 'carousel' | 'grid' | 'list';
   variant?: 'poster' | 'list';
   showViewMore?: boolean;
@@ -30,10 +36,74 @@ function Section({
   title,
   data,
   isLoading,
+  error,
+  refetch,
   layout = 'grid',
   variant = 'poster',
   showViewMore = true,
 }: SectionProps) {
+  // Auto-retry on error after a delay
+  React.useEffect(() => {
+    if (error && refetch && !isLoading) {
+      console.log(`Auto-retrying ${title} section in 5 seconds...`);
+      const timer = setTimeout(() => {
+        console.log(`Auto-retrying ${title} section now`);
+        refetch();
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [error, refetch, isLoading, title]);
+
+  // Error State with Retry
+  if (error && !isLoading) {
+    return (
+      <section className="block_area mb-8 overflow-x-hidden">
+        <div className="block_area-header flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-white">{title}</h2>
+        </div>
+        <div className="bg-gray-800/50 rounded-xl p-8 text-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-red-500/20 rounded-full flex items-center justify-center">
+            <svg
+              className="w-8 h-8 text-red-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <h3 className="text-white font-semibold mb-2">
+            Failed to Load {title}
+          </h3>
+          <p className="text-gray-400 text-sm mb-4">
+            {error?.message?.includes('Rate limit')
+              ? 'Rate limit exceeded. Automatically retrying in a few seconds...'
+              : 'Unable to fetch data. Please check your connection and try again.'}
+          </p>
+          <div className="flex items-center justify-center gap-2 text-blue-400 text-sm">
+            <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+            <span>Retrying automatically...</span>
+          </div>
+          {refetch && (
+            <Button
+              onClick={() => refetch()}
+              variant="outline"
+              size="sm"
+              className="mx-auto mt-4"
+            >
+              Retry Now
+            </Button>
+          )}
+        </div>
+      </section>
+    );
+  }
   if (isLoading) {
     return (
       <section className="block_area mb-8 overflow-x-hidden">
@@ -43,10 +113,10 @@ function Section({
         <div
           className={
             layout === 'carousel'
-              ? 'flex gap-4 overflow-x-auto pb-4 max-w-full'
+              ? 'flex gap-4 overflow-x-auto pb-4 scrollbar-hide max-w-full'
               : variant === 'list'
               ? 'space-y-3'
-              : 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 max-w-full'
+              : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-full overflow-x-hidden'
           }
         >
           {Array.from({ length: variant === 'list' ? 5 : 6 }, (_, i) => (
@@ -102,10 +172,10 @@ function Section({
             ? 'flex gap-4 overflow-x-auto pb-4 scrollbar-hide max-w-full'
             : variant === 'list'
             ? 'space-y-3'
-            : 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 max-w-full overflow-x-hidden'
+            : 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-full overflow-x-hidden'
         }
       >
-        {data.slice(0, variant === 'list' ? 5 : 12).map((anime, index) => (
+        {data.slice(0, variant === 'list' ? 5 : 15).map((anime, index) => (
           <div
             key={anime.mal_id}
             className={layout === 'carousel' ? 'flex-shrink-0 w-44' : ''}
@@ -119,13 +189,36 @@ function Section({
 }
 
 export function Home() {
-  const { data: trending, isLoading: trendingLoading } = useTrending();
-  const { data: topAiring, isLoading: topAiringLoading } = useTopAiring();
-  const { data: mostPopular, isLoading: mostPopularLoading } = useMostPopular();
-  const { data: mostFavorite, isLoading: mostFavoriteLoading } =
-    useMostFavorite();
-  const { data: latestCompleted, isLoading: latestCompletedLoading } =
-    useLatestCompleted();
+  const {
+    data: trending,
+    isLoading: trendingLoading,
+    error: trendingError,
+    refetch: refetchTrending,
+  } = useTrending();
+  const {
+    data: topAiring,
+    isLoading: topAiringLoading,
+    error: topAiringError,
+    refetch: refetchTopAiring,
+  } = useTopAiring();
+  const {
+    data: mostPopular,
+    isLoading: mostPopularLoading,
+    error: mostPopularError,
+    refetch: refetchMostPopular,
+  } = useMostPopular();
+  const {
+    data: mostFavorite,
+    isLoading: mostFavoriteLoading,
+    error: mostFavoriteError,
+    refetch: refetchMostFavorite,
+  } = useMostFavorite();
+  const {
+    data: latestCompleted,
+    isLoading: latestCompletedLoading,
+    error: latestCompletedError,
+    refetch: refetchLatestCompleted,
+  } = useLatestCompleted();
 
   // Use first trending anime for hero spotlight
   const heroAnime = trending?.[0];
@@ -176,6 +269,8 @@ export function Home() {
                   title="Top Airing"
                   data={topAiring}
                   isLoading={topAiringLoading}
+                  error={topAiringError}
+                  refetch={refetchTopAiring}
                   variant="list"
                   layout="grid"
                 />
@@ -183,6 +278,8 @@ export function Home() {
                   title="Most Popular"
                   data={mostPopular}
                   isLoading={mostPopularLoading}
+                  error={mostPopularError}
+                  refetch={refetchMostPopular}
                   variant="list"
                   layout="grid"
                 />
@@ -192,6 +289,8 @@ export function Home() {
                 title="Most Favorite"
                 data={mostFavorite}
                 isLoading={mostFavoriteLoading}
+                error={mostFavoriteError}
+                refetch={refetchMostFavorite}
                 variant="poster"
                 layout="grid"
               />
@@ -201,6 +300,8 @@ export function Home() {
                 title="Latest Episode"
                 data={trending}
                 isLoading={trendingLoading}
+                error={trendingError}
+                refetch={refetchTrending}
                 layout="grid"
                 variant="poster"
               />
@@ -210,6 +311,8 @@ export function Home() {
                 title="Popular On HiAnime"
                 data={mostPopular}
                 isLoading={mostPopularLoading}
+                error={mostPopularError}
+                refetch={refetchMostPopular}
                 layout="grid"
                 variant="poster"
               />
@@ -219,6 +322,8 @@ export function Home() {
                 title="Top Upcoming"
                 data={mostFavorite}
                 isLoading={mostFavoriteLoading}
+                error={mostFavoriteError}
+                refetch={refetchMostFavorite}
                 layout="grid"
                 variant="poster"
               />
@@ -229,75 +334,7 @@ export function Home() {
               <GenresPanel />
 
               {/* Top 10 Section */}
-              <div className="bg-[#1a1a1a] rounded-xl overflow-hidden">
-                <div className="p-4 border-b border-gray-700">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold text-white">Top 10</h3>
-                  </div>
-                  <div className="flex gap-1">
-                    <button className="px-3 py-1 bg-blue-600 text-white text-sm rounded">
-                      Today
-                    </button>
-                    <button className="px-3 py-1 text-gray-400 hover:text-white text-sm">
-                      Week
-                    </button>
-                    <button className="px-3 py-1 text-gray-400 hover:text-white text-sm">
-                      Month
-                    </button>
-                  </div>
-                </div>
-                <div className="p-4">
-                  {topAiring && !topAiringLoading ? (
-                    <div className="space-y-3">
-                      {topAiring.slice(0, 10).map((anime, index) => (
-                        <div
-                          key={anime.mal_id}
-                          className="flex items-center gap-3 p-2 hover:bg-gray-800 rounded-lg transition-colors cursor-pointer"
-                        >
-                          <div
-                            className={`w-8 h-8 rounded flex items-center justify-center text-sm font-bold ${
-                              index < 3
-                                ? 'bg-yellow-600 text-black'
-                                : 'bg-gray-700 text-white'
-                            }`}
-                          >
-                            {String(index + 1).padStart(2, '0')}
-                          </div>
-                          <img
-                            src={anime.images.jpg.image_url}
-                            alt={anime.title}
-                            className="w-12 h-16 object-cover rounded"
-                          />
-                          <div className="flex-1 min-w-0 overflow-hidden">
-                            <h4 className="text-white text-sm font-medium truncate">
-                              {anime.title_english || anime.title}
-                            </h4>
-                            <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
-                              {anime.episodes && (
-                                <span>{anime.episodes} eps</span>
-                              )}
-                              {anime.year && <span>• {anime.year}</span>}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {Array.from({ length: 10 }, (_, i) => (
-                        <div key={i} className="flex items-center gap-3 p-2">
-                          <div className="w-8 h-8 bg-gray-700 rounded animate-pulse"></div>
-                          <div className="w-12 h-16 bg-gray-700 rounded animate-pulse"></div>
-                          <div className="flex-1">
-                            <div className="h-4 bg-gray-700 rounded animate-pulse mb-2"></div>
-                            <div className="h-3 bg-gray-700 rounded animate-pulse w-2/3"></div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
+              <Top10 />
 
               <CommentsPanel />
             </div>
