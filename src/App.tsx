@@ -11,6 +11,11 @@ import { Home } from './pages/Home';
 import { Search } from './pages/Search';
 import { AnimeDetail } from './pages/AnimeDetail';
 import { Watch } from './pages/Watch';
+import { Movies } from './pages/Movies';
+import { TvSeries } from './pages/TvSeries';
+import { MostPopular } from './pages/MostPopular';
+import { TopAiring } from './pages/TopAiring';
+import { Genre } from './pages/Genre';
 import { clearExpiredCache } from './lib/cache';
 
 // Error Fallback Component
@@ -88,6 +93,11 @@ function App() {
                 <Route path="/search" element={<Search />} />
                 <Route path="/anime/:malId" element={<AnimeDetail />} />
                 <Route path="/watch/anime/:malId" element={<Watch />} />
+                <Route path="/movies" element={<Movies />} />
+                <Route path="/tv" element={<TvSeries />} />
+                <Route path="/popular" element={<MostPopular />} />
+                <Route path="/top-airing" element={<TopAiring />} />
+                <Route path="/genre/:genreName" element={<Genre />} />
               </Routes>
             </ErrorBoundary>
           </div>

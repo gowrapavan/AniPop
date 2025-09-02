@@ -84,7 +84,7 @@ export function Header() {
 
             <Link to="/" className="flex items-center gap-2">
               <img
-                src="/img/logo.png"
+                src="https://anipop.netlify.app/img/logo.png"
                 alt="AniPop! Logo"
                 className="h-12 w-auto rounded-lg shadow-glow"
               />
