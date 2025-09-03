@@ -154,14 +154,21 @@ export function useEnhancedAnimeDataId(title?: string, anime?: any) {
     queryFn: async () => {
       if (!title) return null;
 
-      const metadata = anime ? {
-        type: anime.type,
-        year: anime.year,
-        season: anime.season,
-        episodes: anime.episodes
-      } : undefined;
+      const metadata = anime
+        ? {
+            type: anime.type,
+            year: anime.year,
+            season: anime.season,
+            episodes: anime.episodes,
+          }
+        : undefined;
 
-      console.log('Enhanced resolving anime data ID for:', title, 'with metadata:', metadata);
+      console.log(
+        'Enhanced resolving anime data ID for:',
+        title,
+        'with metadata:',
+        metadata
+      );
       const result = await resolveAnimeDataIdWithFallback(title, metadata);
       console.log('Enhanced resolved result:', result);
       return result;
@@ -192,12 +199,18 @@ export function useEpisodeList(animeDataId?: string) {
   });
 }
 
-export function useEnhancedEpisodeList(animeDataResult?: { dataId: string | null; confidence: number }) {
+export function useEnhancedEpisodeList(animeDataResult?: {
+  dataId: string | null;
+  confidence: number;
+}) {
   return useQuery({
     queryKey: ['hianime', 'enhanced-episodes', animeDataResult?.dataId],
     queryFn: async () => {
       if (!animeDataResult?.dataId) return [];
-      console.log('Fetching episodes for enhanced data ID:', animeDataResult.dataId);
+      console.log(
+        'Fetching episodes for enhanced data ID:',
+        animeDataResult.dataId
+      );
       const episodes = await fetchEpisodeList(animeDataResult.dataId);
       console.log('Fetched episodes:', episodes.length);
       return episodes;
@@ -232,5 +245,44 @@ export function useAnimeByGenre(genres: number[] = [], type: string = '') {
     enabled: genres.length > 0 || !!type,
     staleTime: 30 * 60 * 1000, // 30 mins
     gcTime: 60 * 60 * 1000,
+  });
+}
+
+export function useRelatedAnime(anime: any) {
+  return useQuery({
+    queryKey: ['anime', 'related', anime?.mal_id],
+    queryFn: async () => {
+      if (!anime?.title) return [];
+
+      const normalizedTitle = anime.title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .trim()
+        .replace(/\s+/g, '-');
+
+      // 1. Try search by title
+      const searchResponse = await fetch(
+        `https://api.jikan.moe/v4/anime?q=${normalizedTitle}&limit=14&sfw`
+      );
+      const searchData = await searchResponse.json();
+      let results = (searchData.data || []).filter(
+        (r: any) => r.mal_id !== anime.mal_id
+      );
+
+      // 2. Only if no results, use fallback
+      if (!results.length) {
+        const recResponse = await jikanApi.getRecommendations(anime.mal_id);
+        results =
+          recResponse.data?.map((rec: any) => rec.entry).filter(Boolean) || [];
+      }
+
+      return results;
+    },
+    enabled: !!anime?.mal_id,
+    // ⬇️ Ensures it always refetches when anime changes, not reuses old data
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    staleTime: 0,
+    gcTime: 30 * 60 * 1000,
   });
 }

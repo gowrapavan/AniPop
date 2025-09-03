@@ -51,8 +51,56 @@ export function Watch() {
     preferredTitle,
     anime
   );
-  const { data: episodes = [], isLoading: episodesLoading } =
-    useEnhancedEpisodeList(hianimeDataResult);
+  const {
+    data: episodes = [],
+    isLoading: episodesLoading,
+    error: episodesError,
+    refetch: refetchEpisodes,
+  } = useEnhancedEpisodeList(hianimeDataResult);
+
+  // State for retry logic
+  const [retryCount, setRetryCount] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const maxRetries = 5;
+
+  // Auto-retry logic when episodes are empty
+  useEffect(() => {
+    if (
+      hianimeDataResult?.dataId &&
+      !episodesLoading &&
+      episodes.length === 0 &&
+      retryCount < maxRetries &&
+      !isRetrying
+    ) {
+      console.log(
+        `Episodes empty, retrying... (attempt ${retryCount + 1}/${maxRetries})`
+      );
+      setIsRetrying(true);
+
+      const retryDelay = Math.min(2000 * Math.pow(2, retryCount), 10000); // Exponential backoff
+
+      setTimeout(() => {
+        setRetryCount((prev) => prev + 1);
+        refetchEpisodes();
+        setIsRetrying(false);
+      }, retryDelay);
+    }
+  }, [
+    hianimeDataResult?.dataId,
+    episodesLoading,
+    episodes.length,
+    retryCount,
+    isRetrying,
+    refetchEpisodes,
+  ]);
+
+  // Reset retry count when episodes are successfully loaded
+  useEffect(() => {
+    if (episodes.length > 0) {
+      setRetryCount(0);
+      setIsRetrying(false);
+    }
+  }, [episodes.length]);
 
   const [isMobile, setIsMobile] = useState(false);
 
@@ -157,6 +205,20 @@ export function Watch() {
     if (nextEpisode) handleEpisodeSelect(nextEpisode);
   };
 
+  // Manual retry function
+  const handleManualRetry = () => {
+    setRetryCount(0);
+    setIsRetrying(true);
+    refetchEpisodes().finally(() => setIsRetrying(false));
+  };
+
+  // Check if we should show loading state
+  const showEpisodesLoading = episodesLoading || isRetrying;
+  const showEpisodesError =
+    episodesError &&
+    !showEpisodesLoading &&
+    episodes.length === 0 &&
+    retryCount >= maxRetries;
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden">
       <Header />
@@ -195,7 +257,8 @@ export function Watch() {
             <div className="p-4 border-b border-gray-700">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold text-sm sm:text-base truncate">
-                  List of episodes:
+                  List of episodes:{' '}
+                  {episodes.length > 0 && `(${episodes.length})`}
                 </h3>
                 <div className="flex gap-1">
                   <button
@@ -241,57 +304,219 @@ export function Watch() {
 
             {/* Episodes List */}
             <div className="flex-1 overflow-y-auto p-2 sm:p-4 max-h-96 lg:max-h-none custom-scrollbar">
-              <div
-                className={
-                  viewMode === 'list'
-                    ? 'space-y-2'
-                    : 'grid grid-cols-8 sm:grid-cols-7 lg:grid-cols-7 gap-2'
-                }
-              >
-                {filteredEpisodes.map((episode) => (
+              {/* Loading State */}
+              {showEpisodesLoading && (
+                <div className="space-y-4">
+                  <div className="text-center py-6">
+                    <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                    <p className="text-gray-400 text-sm">
+                      {isRetrying
+                        ? `Retrying episodes... (${retryCount}/${maxRetries})`
+                        : 'Loading episodes...'}
+                    </p>
+                  </div>
+
+                  {/* Episode Skeletons */}
                   <div
-                    key={episode.episodeId}
-                    onClick={() => handleEpisodeSelect(episode)}
-                    className={`
-                      cursor-pointer transition-all duration-200 rounded
-                      ${
-                        viewMode === 'list'
-                          ? 'p-2 sm:p-3 bg-gray-700 hover:bg-blue-600 flex items-center gap-2 sm:gap-3'
-                          : 'p-1 sm:p-2 bg-gray-700 hover:bg-blue-600 text-center aspect-square flex items-center justify-center text-xs sm:text-sm'
-                      }
-                      ${
-                        currentEpisode?.episodeId === episode.episodeId
-                          ? 'ring-2 ring-blue-500 bg-blue-900/30'
-                          : ''
-                      }
-                      hover:scale-105
-                    `}
+                    className={
+                      viewMode === 'list'
+                        ? 'space-y-2'
+                        : 'grid grid-cols-8 sm:grid-cols-7 lg:grid-cols-7 gap-2'
+                    }
                   >
-                    {viewMode === 'list' ? (
-                      <>
-                        <div className="w-5 h-5 sm:w-6 sm:h-6 bg-blue-500 rounded flex items-center justify-center flex-shrink-0">
-                          <Play className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
+                    {Array.from(
+                      { length: viewMode === 'list' ? 8 : 21 },
+                      (_, i) => (
+                        <div
+                          key={i}
+                          className={`
+                          animate-pulse bg-gray-700/50 rounded
+                          ${
+                            viewMode === 'list'
+                              ? 'p-2 sm:p-3 flex items-center gap-2 sm:gap-3 h-12'
+                              : 'aspect-square flex items-center justify-center'
+                          }
+                        `}
+                        >
+                          {viewMode === 'list' ? (
+                            <>
+                              <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gray-600 rounded flex-shrink-0"></div>
+                              <div className="flex-1 h-4 bg-gray-600 rounded"></div>
+                            </>
+                          ) : (
+                            <div className="w-6 h-6 bg-gray-600 rounded"></div>
+                          )}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-xs sm:text-sm">
-                            {episode.title &&
-                            episode.title !== `Episode ${episode.number}`
-                              ? episode.title.length > truncationLimit
-                                ? episode.title.substring(0, truncationLimit) +
-                                  '...'
-                                : episode.title
-                              : `Episode ${episode.number}`}
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <span className="font-bold text-xs sm:text-sm">
-                        {episode.number}
-                      </span>
+                      )
                     )}
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
+
+              {/* Error State */}
+              {showEpisodesError && (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-red-500/20 rounded-full flex items-center justify-center">
+                    <svg
+                      className="w-8 h-8 text-red-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-white font-semibold mb-2">
+                    Failed to Load Episodes
+                  </h3>
+                  <p className="text-gray-400 text-sm mb-4">
+                    Unable to fetch episodes after {maxRetries} attempts. This
+                    might be due to:
+                  </p>
+                  <ul className="text-gray-400 text-xs mb-6 space-y-1">
+                    <li>• Network connectivity issues</li>
+                    <li>• Server temporarily unavailable</li>
+                    <li>• Anime not available on streaming platform</li>
+                  </ul>
+                  <div className="space-y-3">
+                    <Button
+                      onClick={handleManualRetry}
+                      variant="gradient"
+                      size="sm"
+                      className="shadow-glow"
+                    >
+                      Try Again
+                    </Button>
+                    <Button onClick={handleBack} variant="outline" size="sm">
+                      Go Back to Details
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Episodes List */}
+              {!showEpisodesLoading &&
+                !showEpisodesError &&
+                episodes.length > 0 && (
+                  <div
+                    className={
+                      viewMode === 'list'
+                        ? 'space-y-2'
+                        : 'grid grid-cols-8 sm:grid-cols-7 lg:grid-cols-7 gap-2'
+                    }
+                  >
+                    {filteredEpisodes.map((episode) => (
+                      <div
+                        key={episode.episodeId}
+                        onClick={() => handleEpisodeSelect(episode)}
+                        className={`
+                        cursor-pointer transition-all duration-200 rounded
+                        ${
+                          viewMode === 'list'
+                            ? 'p-2 sm:p-3 bg-gray-700 hover:bg-blue-600 flex items-center gap-2 sm:gap-3'
+                            : 'p-1 sm:p-2 bg-gray-700 hover:bg-blue-600 text-center aspect-square flex items-center justify-center text-xs sm:text-sm'
+                        }
+                        ${
+                          currentEpisode?.episodeId === episode.episodeId
+                            ? 'ring-2 ring-blue-500 bg-blue-900/30'
+                            : ''
+                        }
+                        hover:scale-105
+                      `}
+                      >
+                        {viewMode === 'list' ? (
+                          <>
+                            <div className="w-5 h-5 sm:w-6 sm:h-6 bg-blue-500 rounded flex items-center justify-center flex-shrink-0">
+                              <Play className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-xs sm:text-sm">
+                                {episode.title &&
+                                episode.title !== `Episode ${episode.number}`
+                                  ? episode.title.length > truncationLimit
+                                    ? episode.title.substring(
+                                        0,
+                                        truncationLimit
+                                      ) + '...'
+                                    : episode.title
+                                  : `Episode ${episode.number}`}
+                              </div>
+                            </div>
+                          </>
+                        ) : (
+                          <span className="font-bold text-xs sm:text-sm">
+                            {episode.number}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+              {/* Empty State (when not loading/error but no episodes) */}
+              {!showEpisodesLoading &&
+                !showEpisodesError &&
+                episodes.length === 0 &&
+                hianimeDataResult?.dataId && (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-gray-700/50 rounded-full flex items-center justify-center">
+                      <Play className="w-8 h-8 text-gray-500" />
+                    </div>
+                    <h3 className="text-white font-semibold mb-2">
+                      No Episodes Available
+                    </h3>
+                    <p className="text-gray-400 text-sm mb-4">
+                      Episodes for this anime are not currently available.
+                    </p>
+                    <Button
+                      onClick={handleManualRetry}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Refresh Episodes
+                    </Button>
+                  </div>
+                )}
+
+              {/* No Data ID State */}
+              {!showEpisodesLoading &&
+                !hianimeDataResult?.dataId &&
+                retryCount >= maxRetries && ( // ✅ only after retries fail
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-yellow-500/20 rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-8 h-8 text-yellow-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 
+             2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 
+             0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        />
+                      </svg>
+                    </div>
+                    <h3 className="text-white font-semibold mb-2">
+                      Anime Not Found
+                    </h3>
+                    <p className="text-gray-400 text-sm mb-4">
+                      This anime is not available for streaming or could not be
+                      found in our database.
+                    </p>
+                    <Button onClick={handleBack} variant="outline" size="sm">
+                      Go Back to Details
+                    </Button>
+                  </div>
+                )}
             </div>
           </div>
 
@@ -312,13 +537,12 @@ export function Watch() {
                       : 'Anime Player'
                   }
                 />
-
               ) : (
                 <div className="w-full h-[250px] sm:h-[350px] lg:h-[calc(100vh-20rem)] flex items-center justify-center">
                   <div className="text-center text-white">
                     <Play className="w-16 h-16 text-gray-600 mx-auto mb-4" />
                     <p className="text-gray-400">
-                      {episodesLoading
+                      {showEpisodesLoading
                         ? 'Loading episodes...'
                         : 'Select an episode to start watching'}
                     </p>

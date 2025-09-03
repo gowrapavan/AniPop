@@ -2,9 +2,53 @@ export const JIKAN_BASE = 'https://api.jikan.moe/v4';
 
 export interface JikanAnime {
   mal_id: number;
+  url?: string;
+  approved?: boolean;
+
+  // Titles
   title: string;
   title_english?: string;
   title_japanese?: string;
+  titles?: Array<{ type: string; title: string }>;
+  title_synonyms?: string[];
+
+  // Media Info
+  type?: string;
+  source?: string;
+  status: string;
+  airing?: boolean;
+  episodes?: number;
+  duration?: string;
+  rating?: string;
+
+  // Dates
+  season?: string;
+  year?: number;
+  aired: {
+    from?: string;
+    to?: string;
+    string: string;
+  };
+  broadcast?: {
+    day?: string | null;
+    time?: string | null;
+    timezone?: string | null;
+    string?: string | null;
+  };
+
+  // Stats
+  score?: number;
+  scored_by?: number;
+  rank?: number;
+  popularity?: number;
+  members?: number;
+  favorites?: number;
+
+  // Description
+  synopsis?: string;
+  background?: string;
+
+  // Media Assets
   images: {
     jpg: {
       image_url: string;
@@ -12,31 +56,37 @@ export interface JikanAnime {
       large_image_url: string;
     };
   };
-  score?: number;
-  scored_by?: number;
-  rank?: number;
-  popularity?: number;
-  synopsis?: string;
-  background?: string;
-  season?: string;
-  year?: number;
-  status: string;
-  episodes?: number;
-  duration?: string;
-  rating?: string;
-  genres: Array<{ mal_id: number; name: string; type: string; url: string }>;
-  studios: Array<{ mal_id: number; name: string; type: string; url: string }>;
-  producers: Array<{ mal_id: number; name: string; type: string; url: string }>;
-  aired: {
-    from?: string;
-    to?: string;
-    string: string;
-  };
   trailer?: {
     youtube_id?: string;
     url?: string;
     embed_url?: string;
   };
+
+  // People / Studios / Genres
+  genres: Array<{ mal_id: number; name: string; type: string; url: string }>;
+  explicit_genres?: Array<{
+    mal_id: number;
+    name: string;
+    type: string;
+    url: string;
+  }>;
+  themes?: Array<{ mal_id: number; name: string; type: string; url: string }>;
+  demographics?: Array<{
+    mal_id: number;
+    name: string;
+    type: string;
+    url: string;
+  }>;
+  studios: Array<{ mal_id: number; name: string; type: string; url: string }>;
+  producers: Array<{ mal_id: number; name: string; type: string; url: string }>;
+  licensors?: Array<{
+    mal_id: number;
+    name: string;
+    type: string;
+    url: string;
+  }>;
+
+  // Relations
   relations?: JikanRelation[];
 }
 
@@ -204,4 +254,16 @@ export const jikanApi = {
       `/anime?${searchParams.toString()}`
     );
   },
+
+  // ✅ Fetch a list of anime (generic, paginated)
+  getAnimeList: (page: number = 1, limit: number = 24) =>
+    fetchJikan<JikanResponse<JikanAnime[]>>(
+      `/anime?page=${page}&limit=${limit}`
+    ),
+
+  // ✅ Fetch recommendations for a specific anime
+  getAnimeRecommendations: (malId: number) =>
+    fetchJikan<JikanResponse<JikanRecommendation[]>>(
+      `/anime/${malId}/recommendations`
+    ),
 };

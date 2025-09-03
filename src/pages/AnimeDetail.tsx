@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Twitter, Facebook, Copy } from 'lucide-react';
-
+import { Footer } from '../components/Footer';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   Play,
@@ -18,7 +18,10 @@ import {
   useAnimeDetails,
   useAnimeCharacters,
   useAnimeRecommendations,
+  useRelatedAnime,
+  useTrending, // ✅ add this
 } from '../hooks/useAnimeData';
+
 import { AnimeCard } from '../components/AnimeCard';
 import { Header } from '../components/Header';
 import { formatScore, getPreferredTitle } from '../lib/utils';
@@ -32,6 +35,19 @@ export function AnimeDetail() {
   const { data: anime, isLoading, error } = useAnimeDetails(animeId);
   const { data: characters } = useAnimeCharacters(animeId);
   const { data: recommendations } = useAnimeRecommendations(animeId);
+  const { data: trending } = useTrending();
+  const combinedRecommendations = React.useMemo(() => {
+    const recs = recommendations?.map((r) => r.entry) || [];
+    const needed = 14 - recs.length;
+    const trendingFill = trending?.slice(0, needed) || [];
+    // fallback: if both empty, return trending alone (first 14)
+    if (recs.length === 0 && trending?.length) {
+      return trending.slice(0, 14);
+    }
+    return [...recs, ...trendingFill];
+  }, [recommendations, trending]);
+
+  const { data: relatedAnime = [] } = useRelatedAnime(anime);
 
   // mobile-only synopsis expander
   const [showFullSynopsis, setShowFullSynopsis] = useState(false);
@@ -261,15 +277,35 @@ export function AnimeDetail() {
 
             {/* Watch Now (full width under the grid) */}
             <div className="mt-4">
-              <Button
-                onClick={handleWatchClick}
-                variant="gradient"
-                icon={<Play className="w-5 h-5" />} // Play icon
-                iconPosition="left" // Ensure it's on the left of the text
-                className="w-full shadow-glow"
-              >
-                Watch Now
-              </Button>
+              {anime.status === 'Not yet aired' ? (
+                <Button
+                  disabled
+                  variant="gradient"
+                  icon={<Calendar className="w-5 h-5" />}
+                  iconPosition="left"
+                  className="w-full shadow-glow opacity-90 cursor-default"
+                >
+                  {anime.aired?.from
+                    ? `Releases on ${new Date(
+                        anime.aired.from
+                      ).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}`
+                    : 'Release date TBA'}
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleWatchClick}
+                  variant="gradient"
+                  icon={<Play className="w-5 h-5" />}
+                  iconPosition="left"
+                  className="w-full shadow-glow"
+                >
+                  Watch Now
+                </Button>
+              )}
             </div>
 
             {/* Synopsis (truncated with "More") */}
@@ -301,13 +337,31 @@ export function AnimeDetail() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
-              className="lg:col-span-3 lg:sticky lg:top-20"
+              className="lg:col-span-3 lg:sticky lg:top-20 space-y-6"
             >
               <img
                 src={anime.images.jpg.large_image_url}
                 alt={getPreferredTitle(anime)}
                 className="w-full max-w-[300px] mx-auto lg:mx-0 rounded-xl shadow-glow"
               />
+
+              {/* Genres */}
+              {anime.genres?.length > 0 && (
+                <div className="glass-effect max-w-[300px] rounded-xl p-4">
+                  <h3 className="text-lg font-semibold mb-4">Genres</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {anime.genres.map((genre) => (
+                      <Link
+                        key={genre.mal_id}
+                        to={`/genre/${encodeURIComponent(genre.name)}`}
+                        className="bg-primary-500/20 border border-primary-500/40 px-4 py-2 rounded-full text-sm cursor-pointer text-primary-300 hover:bg-primary-500/30 hover:border-primary-400 transition-all"
+                      >
+                        {genre.name}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
 
             {/* Middle: Title + Synopsis */}
@@ -373,14 +427,36 @@ export function AnimeDetail() {
 
               {/* Share */}
               <div className="flex items-center gap-3">
-                <Button
-                  onClick={handleWatchClick}
-                  variant="gradient"
-                  className="shadow-glow flex items-center gap-2"
-                >
-                  <Play className="w-5 h-5" />
-                  Watch Now
-                </Button>
+                {anime.status === 'Not yet aired' ? (
+                  <Button
+                    disabled
+                    variant="gradient"
+                    className="shadow-glow flex items-center gap-2 opacity-90 cursor-default"
+                    icon={<Calendar className="w-5 h-5" />}
+                    iconPosition="left"
+                  >
+                    {anime.aired?.from
+                      ? `Releases on ${new Date(
+                          anime.aired.from
+                        ).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })}`
+                      : 'Release date TBA'}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleWatchClick}
+                    variant="gradient"
+                    className="shadow-glow flex items-center gap-2"
+                    icon={<Play className="w-5 h-5" />}
+                    iconPosition="left"
+                  >
+                    Watch Now
+                  </Button>
+                )}
+
                 <span className="text-gray-400 text-sm font-medium">
                   Share:
                 </span>
@@ -422,23 +498,6 @@ export function AnimeDetail() {
                   {anime.synopsis || 'No synopsis available.'}
                 </p>
               </div>
-
-              {/* Genres */}
-              {anime.genres?.length > 0 && (
-                <div className="glass-effect rounded-xl p-6">
-                  <h3 className="text-lg font-semibold mb-4">Genres</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {anime.genres.map((genre) => (
-                      <span
-                        key={genre.mal_id}
-                        className="bg-primary-500/20 border border-primary-500/40 px-4 py-2 rounded-full text-sm cursor-pointer text-primary-300 hover:bg-primary-500/30 hover:border-primary-400 transition-all"
-                      >
-                        {genre.name}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
             </motion.div>
 
             {/* Right: Trailer + Related */}
@@ -497,30 +556,6 @@ export function AnimeDetail() {
                   )}
                 </div>
               </div>
-
-              <div className="glass-effect rounded-xl p-6">
-                <h3 className="text-lg font-semibold mb-4">Related Anime</h3>
-                <div className="space-y-3">
-                  {recommendations?.slice(0, 3).map((rec) => (
-                    <div
-                      key={rec.entry.mal_id}
-                      className="flex space-x-3 p-3 rounded-lg glass-effect hover:bg-white/10 cursor-pointer transition-colors"
-                    >
-                      <img
-                        src={rec.entry.images.jpg.image_url}
-                        alt={rec.entry.title}
-                        className="w-12 h-16 object-cover rounded"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-medium text-white truncate">
-                          {rec.entry.title}
-                        </h4>
-                        <p className="text-xs text-gray-400">TV • 2023</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
           {/* ================= END DESKTOP SECTION (UNCHANGED) ============== */}
@@ -541,7 +576,7 @@ export function AnimeDetail() {
                 <div
                   key={char.character.mal_id}
                   className="flex-shrink-0 w-32 flex flex-col items-center text-center 
-                   glass-effect rounded-2xl p-2 hover:bg-white/10 transition cursor-pointer"
+                   glass-effect  p-2 hover:bg-white/10 transition cursor-pointer"
                 >
                   <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-white/20 mb-3">
                     <img
@@ -559,6 +594,34 @@ export function AnimeDetail() {
             </div>
           </motion.div>
 
+          {relatedAnime.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="mb-12"
+            >
+              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                Related Anime
+              </h2>
+              <div
+                className="
+                  grid grid-cols-2
+                  sm:grid-cols-3
+                  md:grid-cols-4
+                  min-[900px]:grid-cols-5
+                  lg:grid-cols-6
+                  xl:grid-cols-7
+                  gap-3
+                "
+              >
+                {relatedAnime.slice(0, 14).map((rec) => (
+                  <AnimeCard key={rec.mal_id} anime={rec} />
+                ))}
+              </div>
+            </motion.div>
+          )}
+
           {/* Recommendations */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -571,22 +634,23 @@ export function AnimeDetail() {
             </h2>
             <div
               className="
-    grid grid-cols-2
-    sm:grid-cols-3
-    md:grid-cols-4
-    min-[900px]:grid-cols-5
-    lg:grid-cols-6
-    xl:grid-cols-7
-    gap-3
-  "
+                grid grid-cols-2
+                sm:grid-cols-3
+                md:grid-cols-4
+                min-[900px]:grid-cols-5
+                lg:grid-cols-6
+                xl:grid-cols-7
+                gap-3
+              "
             >
-              {recommendations?.slice(0, 14).map((rec) => (
-                <AnimeCard key={rec.entry.mal_id} anime={rec.entry} />
+              {combinedRecommendations.map((anime) => (
+                <AnimeCard key={anime.mal_id} anime={anime} />
               ))}
             </div>
           </motion.div>
         </div>
       </div>
+      <Footer />
 
       <style>{`
         .scrollbar-hide {
