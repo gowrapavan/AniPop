@@ -523,33 +523,45 @@ export function Watch() {
           {/* Player Section */}
           <div className="flex-1 lg:col-span-6 flex flex-col order-1 lg:order-2 min-w-0 overflow-hidden">
             {/* Video Player */}
-            <div className="bg-black relative">
-              {playerUrl ? (
-                <iframe
-                  src={playerUrl}
-                  className="w-full h-[250px] sm:h-[350px] lg:h-[calc(100vh-20rem)] rounded-xl shadow-lg"
-                  allow="autoplay; fullscreen; picture-in-picture"
-                  sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-                  allowFullScreen
-                  title={
-                    currentEpisode
-                      ? `Episode ${currentEpisode.number}`
-                      : 'Anime Player'
-                  }
-                />
-              ) : (
-                <div className="w-full h-[250px] sm:h-[350px] lg:h-[calc(100vh-20rem)] flex items-center justify-center">
-                  <div className="text-center text-white">
-                    <Play className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                    <p className="text-gray-400">
-                      {showEpisodesLoading
-                        ? 'Loading episodes...'
-                        : 'Select an episode to start watching'}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
+        <div className="bg-black relative">
+  {playerUrl ? (
+    <iframe
+      src={playerUrl}
+      className="w-full h-[250px] sm:h-[350px] lg:h-[calc(100vh-20rem)] rounded-xl shadow-lg"
+      allow="autoplay; fullscreen; picture-in-picture"
+      sandbox="allow-scripts allow-same-origin" // restrict redirects
+      allowFullScreen
+      title={
+        currentEpisode
+          ? `Episode ${currentEpisode.number}`
+          : 'Anime Player'
+      }
+      onLoad={(e) => {
+        const iframe = e.currentTarget;
+        try {
+          // If the iframe tries to redirect, reset it
+          if (iframe.contentWindow?.location.href !== playerUrl) {
+            iframe.src = playerUrl;
+          }
+        } catch (err) {
+          // Cross-origin iframes will throw here, ignore safely
+        }
+      }}
+    />
+  ) : (
+    <div className="w-full h-[250px] sm:h-[350px] lg:h-[calc(100vh-20rem)] flex items-center justify-center">
+      <div className="text-center text-white">
+        <Play className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+        <p className="text-gray-400">
+          {showEpisodesLoading
+            ? 'Loading episodes...'
+            : 'Select an episode to start watching'}
+        </p>
+      </div>
+    </div>
+  )}
+</div>
+
 
             {/* Video Controls - Below the video */}
             <div className="bg-gray-900 p-2 sm:p-4 space-y-2 sm:space-y-4 overflow-hidden">
