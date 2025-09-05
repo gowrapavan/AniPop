@@ -1,0 +1,28 @@
+# Robots.txt for Anipop - Anime Streaming Website
+# https://anipop.netlify.app
+
+User-agent: *
+Allow: /
+
+# Block any admin or private areas (if they exist in the future)
+Disallow: /admin/
+Disallow: /private/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /node_modules/
+
+# Allow important directories
+Allow: /movies
+Allow: /tv
+Allow: /popular
+Allow: /top-airing
+Allow: /search
+Allow: /genre/
+Allow: /anime/
+Allow: /watch/
+
+# Sitemap location
+Sitemap: https://anipop.netlify.app/sitemap.xml
+
+# Crawl delay (optional - helps prevent overwhelming the server)
+Crawl-delay: 1

@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Search as SearchIcon, Filter, Grid, List, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  Search as SearchIcon,
+  Filter,
+  Grid,
+  List,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
@@ -9,29 +16,33 @@ import { CardSkeleton } from '../components/Skeletons/CardSkeleton';
 import { Button } from '../components/ui/Button';
 import { useAnimeSearch } from '../hooks/useAnimeSearch';
 import { JikanAnime } from '../lib/jikan';
+import { SEOHead } from '../components/SEOHead';
 
 export function Search() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  
+
   const query = searchParams.get('q') || '';
   const page = parseInt(searchParams.get('page') || '1');
   const type = searchParams.get('type') || '';
   const status = searchParams.get('status') || '';
   const genre = searchParams.get('genre') || '';
-  
+
   const [searchInput, setSearchInput] = useState(query);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
 
   // Memoize search parameters
-  const searchParams_memo = useMemo(() => ({
-    query,
-    page,
-    type,
-    status,
-    genre,
-  }), [query, page, type, status, genre]);
+  const searchParams_memo = useMemo(
+    () => ({
+      query,
+      page,
+      type,
+      status,
+      genre,
+    }),
+    [query, page, type, status, genre]
+  );
 
   const { data, isLoading, error } = useAnimeSearch(searchParams_memo);
 
@@ -41,49 +52,68 @@ export function Search() {
   }, [query]);
 
   // Handle form submit
-  const handleSearch = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchInput.trim()) {
-      setSearchParams({
-        q: searchInput.trim(),
-        page: '1',
-        ...(type && { type }),
-        ...(status && { status }),
-        ...(genre && { genre }),
-      });
-    }
-  }, [searchInput, type, status, genre, setSearchParams]);
+  const handleSearch = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      if (searchInput.trim()) {
+        setSearchParams({
+          q: searchInput.trim(),
+          page: '1',
+          ...(type && { type }),
+          ...(status && { status }),
+          ...(genre && { genre }),
+        });
+      }
+    },
+    [searchInput, type, status, genre, setSearchParams]
+  );
 
-  const handleFilterChange = useCallback((filterType: string, value: string) => {
-    const newParams = new URLSearchParams(searchParams);
-    if (value) {
-      newParams.set(filterType, value);
-    } else {
-      newParams.delete(filterType);
-    }
-    newParams.set('page', '1');
-    setSearchParams(newParams);
-  }, [searchParams, setSearchParams]);
+  const handleFilterChange = useCallback(
+    (filterType: string, value: string) => {
+      const newParams = new URLSearchParams(searchParams);
+      if (value) {
+        newParams.set(filterType, value);
+      } else {
+        newParams.delete(filterType);
+      }
+      newParams.set('page', '1');
+      setSearchParams(newParams);
+    },
+    [searchParams, setSearchParams]
+  );
 
-  const handlePageChange = useCallback((newPage: number) => {
-    const newParams = new URLSearchParams(searchParams);
-    newParams.set('page', newPage.toString());
-    setSearchParams(newParams);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [searchParams, setSearchParams]);
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set('page', newPage.toString());
+      setSearchParams(newParams);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    [searchParams, setSearchParams]
+  );
 
   const clearFilters = useCallback(() => {
     setSearchParams({ q: query, page: '1' });
   }, [query, setSearchParams]);
 
-  const hasActiveFilters = useMemo(() => type || status || genre, [type, status, genre]);
+  const hasActiveFilters = useMemo(
+    () => type || status || genre,
+    [type, status, genre]
+  );
 
   const searchResults = useMemo(() => data?.data ?? [], [data?.data]);
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
+      <SEOHead
+        title={query ? `Search Results for "${query}" - ANIPOP!` : 'Search Anime - Find Your Favorite Anime Series & Movies'}
+        description={query ? `Search results for "${query}". Find anime series, movies, and shows matching your search query.` : 'Search through thousands of anime series and movies. Find your favorite anime by title, genre, or keyword and start watching instantly.'}
+        keywords="anime search, find anime, anime database, search anime series, search anime movies"
+        url={`https://anipop.netlify.app/search${query ? `?q=${encodeURIComponent(query)}` : ''}`}
+        noIndex={!query} // Don't index empty search page
+      />
       <Header />
-      
+
       <div className="pt-16">
         {/* Search Header */}
         <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 border-b border-gray-700">
@@ -96,7 +126,7 @@ export function Search() {
               <h1 className="text-3xl font-bold mb-6 text-center">
                 Search Anime
               </h1>
-              
+
               {/* Search Form */}
               <form onSubmit={handleSearch} className="relative mb-6">
                 <div className="flex">
@@ -157,10 +187,14 @@ export function Search() {
         <div className="container mx-auto px-6 lg:px-8 py-8">
           {/* Loading */}
           {isLoading && (
-            <div className={viewMode === 'grid'
-              ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2'
-              : 'space-y-4'}>
-              {Array.from({ length: 13 }, (_, i) => (
+            <div
+              className={
+                viewMode === 'grid'
+                  ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6'
+                  : 'space-y-4'
+              }
+            >
+              {Array.from({ length: 12 }, (_, i) => (
                 <CardSkeleton key={i} />
               ))}
             </div>
@@ -180,9 +214,11 @@ export function Search() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.4 }}
-                className={viewMode === 'grid'
-                  ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 mb-8'
-                  : 'space-y-4 mb-8'}
+                className={
+                  viewMode === 'grid'
+                    ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 mb-8'
+                    : 'space-y-4 mb-8'
+                }
               >
                 {searchResults.map((anime: JikanAnime, index: number) => (
                   <AnimeCard
@@ -195,49 +231,6 @@ export function Search() {
               </motion.div>
 
               {/* Pagination here */}
-              {/* Pagination */}
-{!isLoading && !error && searchResults.length > 0 && (
-  <div className="flex justify-center items-center gap-2 mt-6">
-    {/* Prev Button */}
-    <Button
-      variant="outline"
-      size="sm"
-      disabled={page <= 1}
-      onClick={() => handlePageChange(page - 1)}
-      className="flex items-center gap-1"
-    >
-      <ChevronLeft className="w-4 h-4" /> Prev
-    </Button>
-
-    {/* Page numbers (show 3 around current) */}
-    {Array.from({ length: 5 }, (_, i) => {
-      const pageNum = page - 2 + i;
-      if (pageNum < 1) return null;
-      return (
-        <Button
-          key={pageNum}
-          variant={pageNum === page ? "gradient" : "outline"}
-          size="sm"
-          onClick={() => handlePageChange(pageNum)}
-          className="px-3"
-        >
-          {pageNum}
-        </Button>
-      );
-    })}
-
-    {/* Next Button */}
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={() => handlePageChange(page + 1)}
-      className="flex items-center gap-1"
-    >
-      Next <ChevronRight className="w-4 h-4" />
-    </Button>
-  </div>
-)}
-
             </>
           )}
         </div>

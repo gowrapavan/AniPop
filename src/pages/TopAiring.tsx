@@ -8,6 +8,7 @@ import { CardSkeleton } from '../components/Skeletons/CardSkeleton';
 import { Button } from '../components/ui/Button';
 import { useTopAiring } from '../hooks/useAnimeData';
 import { JikanAnime } from '../lib/jikan';
+import { SEOHead } from '../components/SEOHead';
 
 export function TopAiring() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -35,6 +36,19 @@ export function TopAiring() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
+      <SEOHead
+        title="Top Airing Anime - Currently Broadcasting Anime Series"
+        description="Watch the top currently airing anime series. Stay up-to-date with the latest episodes of ongoing anime shows, seasonal releases, and weekly anime broadcasts."
+        keywords="airing anime, currently airing, ongoing anime, seasonal anime, weekly anime, latest anime episodes"
+        url="https://anipop.netlify.app/top-airing"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": "Top Airing Anime",
+          "description": "Currently airing anime series ranked by popularity",
+          "url": "https://anipop.netlify.app/top-airing"
+        }}
+      />
       <Header />
 
       <div className="pt-16">

@@ -8,6 +8,8 @@ import { CardSkeleton } from '../components/Skeletons/CardSkeleton';
 import { Button } from '../components/ui/Button';
 import { useMostPopular } from '../hooks/useAnimeData';
 import { JikanAnime } from '../lib/jikan';
+import { SEOHead } from '../components/SEOHead';
+
 
 export function MostPopular() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -35,6 +37,19 @@ export function MostPopular() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
+         <SEOHead
+        title="Most Popular Anime - Top Rated Anime Series & Movies"
+        description="Discover the most popular anime series and movies ranked by community votes. Watch trending anime, top-rated shows, and fan-favorite series online for free."
+        keywords="popular anime, top rated anime, trending anime, best anime series, most watched anime, anime rankings"
+        url="https://anipop.netlify.app/popular"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": "Most Popular Anime",
+          "description": "Most popular anime series and movies ranked by community",
+          "url": "https://anipop.netlify.app/popular"
+        }}
+      />
       <Header />
 
       <div className="pt-16">

@@ -34,6 +34,7 @@ import { getPreferredTitle, formatScore } from '../lib/utils';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { RecommendationProp } from '../components/RecommendationProp';
+import { SEOHead } from '../components/SEOHead';
 
 export function Watch() {
   const { malId } = useParams<{ malId: string }>();
@@ -221,6 +222,18 @@ export function Watch() {
     retryCount >= maxRetries;
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden">
+      <SEOHead
+        title={anime ? `Watch ${getPreferredTitle(anime)} ${currentEpisode ? `Episode ${currentEpisode.number}` : ''} Online Free` : 'Watch Anime Online - ANIPOP!'}
+        description={anime ? 
+          `Watch ${getPreferredTitle(anime)} ${currentEpisode ? `Episode ${currentEpisode.number}` : ''} online for free in HD quality with subtitles. Stream anime episodes instantly on ANIPOP!` :
+          'Watch anime episodes online for free in HD quality with subtitles and dubbing.'
+        }
+        keywords={anime ? `watch ${getPreferredTitle(anime)}, ${getPreferredTitle(anime)} episode ${currentEpisode?.number || ''}, anime streaming, free anime` : 'watch anime online, anime streaming, free anime episodes'}
+        url={`https://anipop.netlify.app/watch/anime/${malId}${currentEpId ? `?ep=${currentEpId}` : ''}`}
+        image={anime?.images?.jpg?.large_image_url}
+        type="video.tv_show"
+        noIndex={!anime} // Don't index if anime not found
+      />
       <Header />
 
       <div className="pt-16">
@@ -520,7 +533,7 @@ export function Watch() {
             </div>
           </div>
 
-          {/* Player Section */}
+           {/* Player Section */}
           <div className="flex-1 lg:col-span-6 flex flex-col order-1 lg:order-2 min-w-0 overflow-hidden">
             {/* Video Player */}
         <div className="bg-black relative">
@@ -561,7 +574,6 @@ export function Watch() {
     </div>
   )}
 </div>
-
 
             {/* Video Controls - Below the video */}
             <div className="bg-gray-900 p-2 sm:p-4 space-y-2 sm:space-y-4 overflow-hidden">

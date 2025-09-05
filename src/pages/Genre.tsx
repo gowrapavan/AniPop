@@ -10,6 +10,7 @@ import { AnimeCard } from '../components/AnimeCard';
 import { CardSkeleton } from '../components/Skeletons/CardSkeleton';
 import { Button } from '../components/ui/Button';
 import { JikanAnime, JikanResponse } from '../lib/jikan';
+import { SEOHead } from '../components/SEOHead';
 
 // ✅ Genre mapping for display names and IDs
 const genreMap: Record<
@@ -213,6 +214,11 @@ export function Genre() {
   if (!genre) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] text-white">
+        <SEOHead
+          title="Genre Not Found - ANIPOP!"
+          description="The anime genre you're looking for doesn't exist. Browse our available anime genres."
+          noIndex={true}
+        />
         <Header />
         <div className="pt-16 flex items-center justify-center min-h-[calc(100vh-4rem)]">
           <motion.div
@@ -233,6 +239,23 @@ export function Genre() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
+      <SEOHead
+        title={`${genre.name} Anime - Watch ${genre.name} Anime Series & Movies`}
+        description={`${genre.description} Discover and watch the best ${genre.name.toLowerCase()} anime series and movies online for free.`}
+        keywords={`${genre.name.toLowerCase()} anime, ${genre.name.toLowerCase()} anime series, ${genre.name.toLowerCase()} anime movies, watch ${genre.name.toLowerCase()} anime`}
+        url={`https://anipop.netlify.app/genre/${genreName}`}
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": `${genre.name} Anime`,
+          "description": genre.description,
+          "url": `https://anipop.netlify.app/genre/${genreName}`,
+          "mainEntity": {
+            "@type": "ItemList",
+            "name": `${genre.name} Anime Collection`
+          }
+        }}
+      />
       <Header />
 
       <div className="pt-16">

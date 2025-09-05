@@ -26,6 +26,7 @@ import { AnimeCard } from '../components/AnimeCard';
 import { Header } from '../components/Header';
 import { formatScore, getPreferredTitle } from '../lib/utils';
 import { Button } from '../components/ui/Button';
+import { SEOHead } from '../components/SEOHead';
 
 export function AnimeDetail() {
   const { malId } = useParams<{ malId: string }>();
@@ -116,6 +117,11 @@ export function AnimeDetail() {
   if (error || !anime) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] text-white">
+        <SEOHead
+          title="Anime Not Found - ANIPOP!"
+          description="The anime you're looking for could not be found. Browse our collection of anime series and movies."
+          noIndex={true}
+        />
         <Header />
         <div className="pt-16 flex items-center justify-center min-h-[calc(100vh-4rem)]">
           <motion.div
@@ -146,6 +152,41 @@ export function AnimeDetail() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
+      <SEOHead
+        title={`${getPreferredTitle(anime)} - Watch Online Free`}
+        description={anime.synopsis ? 
+          `Watch ${getPreferredTitle(anime)} online for free. ${anime.synopsis.substring(0, 120)}...` :
+          `Watch ${getPreferredTitle(anime)} anime online for free in HD quality with subtitles and dubbing.`
+        }
+        keywords={`${getPreferredTitle(anime)}, watch ${getPreferredTitle(anime)}, ${anime.genres?.map(g => g.name).join(', ')}, anime`}
+        url={`https://anipop.netlify.app/anime/${anime.mal_id}`}
+        image={anime.images.jpg.large_image_url}
+        type="video.tv_show"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": anime.type === 'Movie' ? "Movie" : "TVSeries",
+          "name": getPreferredTitle(anime),
+          "alternateName": anime.title_japanese,
+          "description": anime.synopsis,
+          "image": anime.images.jpg.large_image_url,
+          "datePublished": anime.aired?.from,
+          "genre": anime.genres?.map(g => g.name),
+          "aggregateRating": anime.score ? {
+            "@type": "AggregateRating",
+            "ratingValue": anime.score,
+            "ratingCount": anime.scored_by,
+            "bestRating": 10,
+            "worstRating": 1
+          } : undefined,
+          "numberOfEpisodes": anime.episodes,
+          "inLanguage": "ja",
+          "subtitleLanguage": ["en", "ja"],
+          "productionCompany": anime.studios?.map(s => ({
+            "@type": "Organization",
+            "name": s.name
+          }))
+        }}
+      />
       <Header />
 
       <div className="pt-16">

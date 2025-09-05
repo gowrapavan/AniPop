@@ -1,0 +1,46 @@
+# Netlify headers for better SEO and performance
+
+/*
+  # Security headers
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
+  
+  # Cache control for static assets
+  Cache-Control: public, max-age=31536000, immutable
+
+# Special cache rules for HTML files
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Cache control for API responses
+/api/*
+  Cache-Control: public, max-age=300
+
+# Cache control for images
+/*.jpg
+  Cache-Control: public, max-age=31536000, immutable
+/*.png
+  Cache-Control: public, max-age=31536000, immutable
+/*.gif
+  Cache-Control: public, max-age=31536000, immutable
+/*.webp
+  Cache-Control: public, max-age=31536000, immutable
+
+# Cache control for fonts
+/*.woff2
+  Cache-Control: public, max-age=31536000, immutable
+/*.woff
+  Cache-Control: public, max-age=31536000, immutable
+/*.ttf
+  Cache-Control: public, max-age=31536000, immutable
+
+# Sitemap and robots
+/sitemap.xml
+  Content-Type: application/xml
+  Cache-Control: public, max-age=86400
+
+/robots.txt
+  Content-Type: text/plain
+  Cache-Control: public, max-age=86400

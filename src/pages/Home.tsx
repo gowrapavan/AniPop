@@ -12,6 +12,7 @@ import { HeroSkeleton } from '../components/Skeletons/HeroSkeleton';
 import { TrendingSlider } from '../components/TrendingSlider';
 import { Footer } from '../components/Footer';
 import { Top10 } from '../components/Top10';
+import { SEOHead } from '../components/SEOHead';
 
 import {
   useTopAiring,
@@ -225,6 +226,28 @@ export function Home() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden">
+
+      <SEOHead
+        title="ANIPOP! - Watch Anime Online Free | HD Quality Anime Streaming"
+        description="Watch thousands of anime episodes and movies online for free in HD quality. Stream popular anime series, latest releases, and classic titles with subtitles and dubbing."
+        keywords="anime, watch anime online, free anime, anime streaming, anime movies, anime series, subbed anime, dubbed anime, HD anime"
+        url="https://anipop.netlify.app/"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "ANIPOP!",
+          "url": "https://anipop.netlify.app",
+          "description": "Watch thousands of anime episodes and movies online for free in HD quality",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://anipop.netlify.app/search?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        }}
+      />
       <Header />
 
       {/* Main Content Container */}

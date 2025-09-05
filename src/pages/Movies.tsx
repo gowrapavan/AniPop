@@ -8,6 +8,8 @@ import { CardSkeleton } from '../components/Skeletons/CardSkeleton';
 import { Button } from '../components/ui/Button';
 import { JikanAnime } from '../lib/jikan';
 import { useSearchParams } from 'react-router-dom';
+import { SEOHead } from '../components/SEOHead';
+
 
 export function Movies() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -74,6 +76,23 @@ export function Movies() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
+        <SEOHead
+        title="Anime Movies - Watch Latest Anime Films Online Free"
+        description="Discover and watch the best anime movies online for free. From Studio Ghibli classics to latest anime films, stream high-quality anime movies with subtitles and dubbing."
+        keywords="anime movies, anime films, Studio Ghibli, anime cinema, watch anime movies online, free anime movies"
+        url="https://anipop.netlify.app/movies"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": "Anime Movies",
+          "description": "Collection of anime movies available for streaming",
+          "url": "https://anipop.netlify.app/movies",
+          "mainEntity": {
+            "@type": "ItemList",
+            "name": "Anime Movies Collection"
+          }
+        }}
+      />
       <Header />
 
       <div className="pt-16">

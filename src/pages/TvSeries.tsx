@@ -10,6 +10,7 @@ import { useSearchParams } from 'react-router-dom';
 import { JikanAnime } from '../lib/jikan';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+import { SEOHead } from '../components/SEOHead';
 
 export function TvSeries() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -72,6 +73,23 @@ export function TvSeries() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
+      <SEOHead
+        title="Anime TV Series - Watch Popular Anime Shows Online"
+        description="Stream the most popular anime TV series online for free. Watch ongoing and completed anime shows with multiple episodes, including shounen, seinen, and slice of life series."
+        keywords="anime TV series, anime shows, ongoing anime, completed anime, shounen anime, seinen anime, slice of life anime"
+        url="https://anipop.netlify.app/tv"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": "Anime TV Series",
+          "description": "Collection of anime TV series available for streaming",
+          "url": "https://anipop.netlify.app/tv",
+          "mainEntity": {
+            "@type": "ItemList",
+            "name": "Anime TV Series Collection"
+          }
+        }}
+      />
       <Header />
 
       <div className="pt-16">
