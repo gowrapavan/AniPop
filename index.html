@@ -2,11 +2,85 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+
     <!-- ✅ Favicon -->
     <link rel="icon" type="image/png" href="/img/favicon.png" />
+
+    <!-- ✅ Viewport -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- ✅ Updated Title -->
-    <title>ANIPOP!</title>
+
+    <!-- ✅ Robots -->
+    <meta name="robots" content="index, follow" />
+
+    <!-- ✅ Title (SEO-rich, includes primary keywords) -->
+    <title>Anipop – Watch Free Anime Movies & TV Shows Online</title>
+
+    <!-- ✅ Meta Description (155–160 chars, engaging) -->
+    <meta
+      name="description"
+      content="Stream free anime movies & TV shows online with Anipop. Discover top-airing, trending, and genre-based anime collections. Watch anime in HD anytime, anywhere."
+    />
+
+    <!-- ✅ Keywords -->
+    <meta
+      name="keywords"
+      content="anime streaming, watch anime online, free anime, anime movies, anime tv shows, popular anime, top airing anime, Anipop"
+    />
+
+    <!-- ✅ Canonical URL -->
+    <link rel="canonical" href="https://anipop.netlify.app/" />
+
+    <!-- ✅ Sitemap -->
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml" />
+
+    <!-- ✅ Open Graph (Facebook / LinkedIn) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://anipop.netlify.app/" />
+    <meta property="og:title" content="Anipop – Watch Anime Online Free" />
+    <meta
+      property="og:description"
+      content="Watch anime movies & TV shows online with Anipop. Explore trending, top-airing, and genre-based anime in HD for free."
+    />
+    <meta property="og:image" content="https://anipop.netlify.app/img/preview.png" />
+    <meta property="og:site_name" content="Anipop" />
+
+    <!-- ✅ Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://anipop.netlify.app/" />
+    <meta name="twitter:title" content="Anipop – Watch Free Anime Online" />
+    <meta
+      name="twitter:description"
+      content="Stream anime movies & TV shows online with Anipop. Discover trending anime and explore genres in HD."
+    />
+    <meta name="twitter:image" content="https://anipop.netlify.app/img/preview.png" />
+
+    <!-- ✅ Structured Data (JSON-LD for Website + Search) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Anipop",
+      "url": "https://anipop.netlify.app/",
+      "description": "Stream free anime movies & TV shows online. Explore trending, top-airing, and genre-based anime with Anipop.",
+      "publisher": {
+        "@type": "Organization",
+        "name": "Anipop",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://anipop.netlify.app/img/favicon.png"
+        }
+      },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://anipop.netlify.app/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <!-- ✅ Performance hints -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
   </head>
   <body>
     <div id="root"></div>
