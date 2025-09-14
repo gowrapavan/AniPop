@@ -4,9 +4,7 @@
 /browse           /search      301
 /series           /tv          301
 /shows            /tv          301
-/tv/              /tv          301
-/popular/         /popular     301
-/top-airing/      /top-airing  301
+
 
 # ❌ removed /movies/ → /movies (causing loop)
 
