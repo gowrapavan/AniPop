@@ -1,20 +1,13 @@
-# Netlify redirects for better SEO and user experience
+# Clean redirects
+/anime-list       /search      301
+/anime-directory  /search      301
+/browse           /search      301
+/series           /tv          301
+/shows            /tv          301
+/movies/          /movies      301
+/tv/              /tv          301
+/popular/         /popular     301
+/top-airing/      /top-airing  301
 
-# Redirect common anime-related URLs to search
-/anime-list    /search    301
-/anime-directory    /search    301
-/browse    /search    301
-
-# Redirect old URLs if you had any
-/series    /tv    301
-/shows    /tv    301
-
-# Handle trailing slashes consistently
-/movies/    /movies    301
-/tv/        /tv        301
-/popular/   /popular   301
-/top-airing/ /top-airing 301
-/search/    /search    301
-
-# ✅ Catch-all: Single Page App fallback
-/*    /index.html    200
+# SPA Fallback (with bang to stop reprocessing)
+/*    /index.html    200!
