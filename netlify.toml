@@ -2,6 +2,53 @@
   command = "npm run build"
   publish = "dist"
 
+# SEO redirects
+[[redirects]]
+  from = "/anime-list"
+  to = "/search"
+  status = 301
+
+[[redirects]]
+  from = "/anime-directory"
+  to = "/search"
+  status = 301
+
+[[redirects]]
+  from = "/browse"
+  to = "/search"
+  status = 301
+
+[[redirects]]
+  from = "/series"
+  to = "/tv"
+  status = 301
+
+[[redirects]]
+  from = "/shows"
+  to = "/tv"
+  status = 301
+
+[[redirects]]
+  from = "/movies/"
+  to = "/movies"
+  status = 301
+
+[[redirects]]
+  from = "/tv/"
+  to = "/tv"
+  status = 301
+
+[[redirects]]
+  from = "/popular/"
+  to = "/popular"
+  status = 301
+
+[[redirects]]
+  from = "/top-airing/"
+  to = "/top-airing"
+  status = 301
+
+# SPA Fallback (with force to stop loop)
 [[redirects]]
   from = "/*"
   to = "/index.html"
