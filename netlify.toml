@@ -59,7 +59,7 @@
   to = "/img/:splat"
   status = 200
 
-# 🔥 SPA Fallback (for client-side routes only)
+# 🔥 SPA Fallback (for client-side routes)
 [[redirects]]
   from = "/*"
   to = "/index.html"
