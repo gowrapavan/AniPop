@@ -13,6 +13,8 @@ import { TvSeries } from './pages/TvSeries';
 import { MostPopular } from './pages/MostPopular';
 import { TopAiring } from './pages/TopAiring';
 import { Genre } from './pages/Genre';
+import NotFound from './pages/404'; // Works with default export
+
 
 import { clearExpiredCache } from './lib/cache';
 import { SEOHead } from './components/SEOHead';
@@ -87,6 +89,8 @@ function App() {
                   <Route path="/popular" element={<MostPopular />} />
                   <Route path="/top-airing" element={<TopAiring />} />
                   <Route path="/genre/:genreName" element={<Genre />} />
+                    {/* 404 Page */}
+                  <Route path="*" element={<NotFound />} />
                 </Routes>
               </ErrorBoundary>
             </div>
