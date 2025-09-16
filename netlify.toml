@@ -2,7 +2,7 @@
   command = "npm run build"
   publish = "dist"
 
-# SEO redirects
+# Redirects for SEO
 [[redirects]]
   from = "/anime-list"
   to = "/search"
@@ -48,9 +48,19 @@
   to = "/top-airing"
   status = 301
 
-# SPA Fallback (with force to stop loop)
+# 🚀 Exclude assets from fallback
+[[redirects]]
+  from = "/assets/*"
+  to = "/assets/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/img/*"
+  to = "/img/:splat"
+  status = 200
+
+# SPA Fallback (catch-all for routes, but not assets)
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-  force = true
