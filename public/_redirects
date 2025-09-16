@@ -4,10 +4,14 @@
 /browse           /search   301
 /series           /tv       301
 /shows            /tv       301
+/movies/          /movies   301
+/tv/              /tv       301
+/popular/         /popular  301
+/top-airing/      /top-airing 301
 
-# ✅ Allow static assets (served as-is)
+# ✅ Serve static assets as-is
 /assets/*    /assets/:splat   200
 /img/*       /img/:splat      200
 
-# SPA Fallback (must be last, no bang!)
-/*    /index.html   200
+# 🔥 SPA fallback (must be last, no bang!)
+/*          /index.html      200
