@@ -1,12 +1,13 @@
-# Clean redirects
-/anime-list       /search      301
-/anime-directory  /search      301
-/browse           /search      301
-/series           /tv          301
-/shows            /tv          301
+# SEO redirects
+/anime-list       /search   301
+/anime-directory  /search   301
+/browse           /search   301
+/series           /tv       301
+/shows            /tv       301
 
+# ✅ Allow static assets (served as-is)
+/assets/*    /assets/:splat   200
+/img/*       /img/:splat      200
 
-# ❌ removed /movies/ → /movies (causing loop)
-
-# SPA Fallback (with bang to stop reprocessing)
-/*    /index.html    200!
+# SPA Fallback (must be last, no bang!)
+/*    /index.html   200
